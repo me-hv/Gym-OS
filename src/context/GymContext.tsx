@@ -1,9 +1,32 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Member, MembershipPlan, AttendanceRecord, PaymentTransaction, GymStats, MemberStatus } from '../types';
-import { INITIAL_MEMBERS, MEMBERSHIP_PLANS, INITIAL_CHECKINS, INITIAL_PAYMENTS, INITIAL_GYM_STATS } from '../data/mockData';
-import { gymService, OrgProfile, UserSession, DEFAULT_PILOT_ORG, DEFAULT_PILOT_USER } from '../services/gymService';
+import {
+  Member,
+  MembershipPlan,
+  AttendanceRecord,
+  PaymentTransaction,
+  GymStats,
+  MemberStatus,
+  RenewalPayload,
+  AppMode,
+} from '../types';
+import {
+  INITIAL_MEMBERS,
+  MEMBERSHIP_PLANS,
+  INITIAL_CHECKINS,
+  INITIAL_PAYMENTS,
+  INITIAL_GYM_STATS,
+} from '../data/mockData';
+import {
+  gymService,
+  OrgProfile,
+  UserSession,
+  DEFAULT_PILOT_ORG,
+  DEFAULT_PILOT_USER,
+  GymOperationError,
+  getAppMode,
+} from '../services/gymService';
 import { createClient } from '../lib/supabase/client';
 
 export type ActiveNavView = 'overview' | 'members' | 'profile' | 'attendance' | 'memberships' | 'payments';
@@ -25,6 +48,7 @@ interface GymContextType {
   // Tenant / Auth Session
   organization: OrgProfile;
   currentUser: UserSession;
+  appMode: AppMode;
   signOut: () => Promise<void>;
 
   members: Member[];
@@ -36,7 +60,25 @@ interface GymContextType {
 
   // Actions
   checkInMember: (memberId: string) => Promise<{ success: boolean; message: string }>;
-  addMember: (member: Omit<Member, 'id' | 'memberCode' | 'daysRemaining' | 'attendanceRate' | 'weeklyFrequency' | 'totalVisits' | 'monthlyVisits' | 'lastVisit' | 'lastVisitDate' | 'attendanceHistory' | 'timeline'>) => Promise<void>;
+  checkOutMember: (memberId: string) => Promise<{ success: boolean; message: string }>;
+  addMember: (
+    member: Omit<
+      Member,
+      | 'id'
+      | 'memberCode'
+      | 'daysRemaining'
+      | 'attendanceRate'
+      | 'weeklyFrequency'
+      | 'totalVisits'
+      | 'monthlyVisits'
+      | 'lastVisit'
+      | 'lastVisitDate'
+      | 'attendanceHistory'
+      | 'timeline'
+      | 'membershipHistory'
+    >
+  ) => Promise<void>;
+  renewMembership: (payload: RenewalPayload) => Promise<void>;
   updateMemberStatus: (memberId: string, status: MemberStatus) => void;
   recordPayment: (payment: Omit<PaymentTransaction, 'id' | 'invoiceNumber'>) => Promise<void>;
   createPlan: (plan: Omit<MembershipPlan, 'id' | 'activeMembersCount' | 'totalRevenueINR' | 'expiringThisWeek'>) => void;
@@ -57,6 +99,10 @@ interface GymContextType {
   setCreatePlanModalOpen: (open: boolean) => void;
   isCommandPaletteOpen: boolean;
   setCommandPaletteOpen: (open: boolean) => void;
+
+  renewModalData: { isOpen: boolean; member: Member | null };
+  openRenewModal: (member: Member) => void;
+  closeRenewModal: () => void;
 
   whatsAppModalData: { isOpen: boolean; member: Member | null; defaultMessage: string };
   openWhatsAppModal: (member: Member, customMsg?: string) => void;
@@ -79,6 +125,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [organization, setOrganization] = useState<OrgProfile>(DEFAULT_PILOT_ORG);
   const [currentUser, setCurrentUser] = useState<UserSession>(DEFAULT_PILOT_USER);
+  const [appMode] = useState<AppMode>(getAppMode());
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
@@ -94,6 +141,11 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAddMemberModalOpen, setAddMemberModalOpen] = useState(false);
   const [isCreatePlanModalOpen, setCreatePlanModalOpen] = useState(false);
   const [isCommandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+  const [renewModalData, setRenewModalData] = useState<{ isOpen: boolean; member: Member | null }>({
+    isOpen: false,
+    member: null,
+  });
 
   const [whatsAppModalData, setWhatsAppModalData] = useState<{ isOpen: boolean; member: Member | null; defaultMessage: string }>({
     isOpen: false,
@@ -112,10 +164,25 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   // Re-calculate dashboard metrics whenever members, checkIns, or payments change
-  const refreshStats = useCallback((mList: Member[], cList: AttendanceRecord[], pList: PaymentTransaction[], peakCap: number) => {
-    const recalculated = gymService.calculateDashboardMetrics(mList, cList, pList, peakCap);
-    setGymStats(recalculated);
+  const refreshStats = useCallback(
+    (mList: Member[], cList: AttendanceRecord[], pList: PaymentTransaction[], peakCap: number) => {
+      const recalculated = gymService.calculateDashboardMetrics(mList, cList, pList, peakCap);
+      setGymStats(recalculated);
+    },
+    []
+  );
+
+  const addToast = useCallback((toast: Omit<ToastItem, 'id'>) => {
+    const id = 'toast-' + Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { ...toast, id }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4500);
   }, []);
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Initialize tenant session & data
   useEffect(() => {
@@ -142,8 +209,13 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setPlans(loadedPlans);
         setPayments(loadedPayments);
         refreshStats(loadedMembers, INITIAL_CHECKINS, loadedPayments, org.peakCapacity);
-      } catch (err) {
-        console.error('Failed loading tenant data from Supabase:', err);
+      } catch (err: any) {
+        console.error('Tenant data load error:', err);
+        addToast({
+          title: 'Connection Notice',
+          message: err?.message || 'Operating in demo evaluation workspace.',
+          type: 'info',
+        });
       } finally {
         if (isMounted) setIsLoadingData(false);
       }
@@ -154,7 +226,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => {
       isMounted = false;
     };
-  }, [refreshStats]);
+  }, [refreshStats, addToast]);
 
   // Global Keyboard Shortcuts (Cmd+K / Ctrl+K)
   useEffect(() => {
@@ -167,18 +239,6 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  const addToast = (toast: Omit<ToastItem, 'id'>) => {
-    const id = 'toast-' + Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { ...toast, id }]);
-    setTimeout(() => {
-      removeToast(id);
-    }, 4500);
-  };
-
-  const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
 
   const viewMemberProfile = (id: string) => {
     setSelectedMemberId(id);
@@ -211,96 +271,241 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (member.status === 'expired') {
       addToast({
-        title: 'Check-in Warning: Expired Membership',
-        message: `${member.name}'s membership expired. Please renew plan before floor entry.`,
+        title: 'Check-in Alert: Expired Membership',
+        message: `${member.name}'s membership has expired. Please renew subscription before floor entry.`,
         type: 'warning',
       });
     } else if (member.status === 'frozen') {
       addToast({
-        title: 'Check-in Warning: Frozen Plan',
-        message: `${member.name}'s membership is currently paused.`,
+        title: 'Check-in Alert: Frozen Plan',
+        message: `${member.name}'s membership is currently paused on medical/travel hold.`,
         type: 'warning',
       });
     }
 
-    const newRecord = await gymService.checkInMember(organization.id, member, 'Floor Workout');
+    try {
+      const newRecord = await gymService.checkInMember(organization.id, member, checkIns, 'Floor Workout');
 
-    const updatedCheckIns = [newRecord, ...checkIns];
-    setCheckIns(updatedCheckIns);
+      const updatedCheckIns = [newRecord, ...checkIns];
+      setCheckIns(updatedCheckIns);
 
-    const now = new Date();
-    const timeStr = newRecord.checkInTime;
-    const dateStr = newRecord.date;
+      const timeStr = newRecord.checkInTime;
+      const dateStr = newRecord.date;
 
-    const updatedMembers = members.map((m) => {
-      if (m.id === member.id) {
-        return {
-          ...m,
-          lastVisit: `Today, ${timeStr}`,
-          lastVisitDate: dateStr,
-          totalVisits: m.totalVisits + 1,
-          monthlyVisits: m.monthlyVisits + 1,
-          attendanceHistory: [
-            {
-              id: 'att-' + Date.now(),
-              date: dateStr,
-              time: timeStr,
-              durationMinutes: 60,
-              workoutType: 'Floor Workout',
-              trainerName: m.assignedTrainer,
-            },
-            ...m.attendanceHistory,
-          ],
-          timeline: [
-            {
-              id: 'tim-' + Date.now(),
-              type: 'checkin' as const,
-              title: 'Checked in at Reception Desk',
-              description: `Floor entry logged at ${timeStr}`,
-              timestamp: `Today, ${timeStr}`,
-            },
-            ...m.timeline,
-          ],
-        };
-      }
-      return m;
-    });
+      const updatedMembers = members.map((m) => {
+        if (m.id === member.id) {
+          return {
+            ...m,
+            lastVisit: `Today, ${timeStr}`,
+            lastVisitDate: dateStr,
+            isCurrentlyOnFloor: true,
+            totalVisits: m.totalVisits + 1,
+            monthlyVisits: m.monthlyVisits + 1,
+            attendanceHistory: [
+              {
+                id: 'att-' + Date.now(),
+                date: dateStr,
+                time: timeStr,
+                durationMinutes: 60,
+                workoutType: 'Floor Workout',
+                trainerName: m.assignedTrainer,
+              },
+              ...m.attendanceHistory,
+            ],
+            timeline: [
+              {
+                id: 'tim-' + Date.now(),
+                type: 'checkin' as const,
+                title: 'Checked in at Reception Desk',
+                description: `Floor entry logged at ${timeStr}`,
+                timestamp: `Today, ${timeStr}`,
+              },
+              ...m.timeline,
+            ],
+          };
+        }
+        return m;
+      });
 
-    setMembers(updatedMembers);
-    refreshStats(updatedMembers, updatedCheckIns, payments, organization.peakCapacity);
+      setMembers(updatedMembers);
+      refreshStats(updatedMembers, updatedCheckIns, payments, organization.peakCapacity);
 
-    addToast({
-      title: 'Check-in Recorded',
-      message: `${member.name} (${member.planName}) checked in successfully at ${timeStr}.`,
-      type: 'success',
-    });
+      addToast({
+        title: 'Check-In Logged',
+        message: `${member.name} (${member.planName}) entered gym floor at ${timeStr}.`,
+        type: 'success',
+      });
 
-    return { success: true, message: `${member.name} checked in successfully` };
+      return { success: true, message: `${member.name} checked in successfully` };
+    } catch (err: any) {
+      addToast({
+        title: 'Check-In Blocked',
+        message: err?.message || 'Duplicate check-in or database validation failed.',
+        type: 'warning',
+      });
+      return { success: false, message: err?.message || 'Check-in failed' };
+    }
+  };
+
+  const checkOutMember = async (memberId: string): Promise<{ success: boolean; message: string }> => {
+    const member = members.find((m) => m.id === memberId);
+    if (!member) return { success: false, message: 'Member not found' };
+
+    try {
+      const { checkOutTime } = await gymService.checkOutMember(organization.id, member.id, member.name);
+
+      const updatedCheckIns = checkIns.map((c) =>
+        c.memberId === memberId && c.isToday && !c.checkOutTime
+          ? { ...c, checkOutTime, isOnFloor: false }
+          : c
+      );
+      setCheckIns(updatedCheckIns);
+
+      const updatedMembers = members.map((m) => {
+        if (m.id === memberId) {
+          return {
+            ...m,
+            isCurrentlyOnFloor: false,
+            timeline: [
+              {
+                id: 'tim-' + Date.now(),
+                type: 'checkout' as const,
+                title: 'Departed Gym Floor',
+                description: `Check-out recorded at ${checkOutTime}`,
+                timestamp: `Today, ${checkOutTime}`,
+              },
+              ...m.timeline,
+            ],
+          };
+        }
+        return m;
+      });
+
+      setMembers(updatedMembers);
+      refreshStats(updatedMembers, updatedCheckIns, payments, organization.peakCapacity);
+
+      addToast({
+        title: 'Floor Check-Out Logged',
+        message: `${member.name} departed at ${checkOutTime}. Floor count updated.`,
+        type: 'info',
+      });
+
+      return { success: true, message: 'Checked out successfully' };
+    } catch (err: any) {
+      addToast({
+        title: 'Check-Out Error',
+        message: err?.message || 'Failed to record check-out.',
+        type: 'error',
+      });
+      return { success: false, message: err?.message || 'Check-out failed' };
+    }
   };
 
   const addMember = async (
     memberData: Omit<
       Member,
-      'id' | 'memberCode' | 'daysRemaining' | 'attendanceRate' | 'weeklyFrequency' | 'totalVisits' | 'monthlyVisits' | 'lastVisit' | 'lastVisitDate' | 'attendanceHistory' | 'timeline'
+      | 'id'
+      | 'memberCode'
+      | 'daysRemaining'
+      | 'attendanceRate'
+      | 'weeklyFrequency'
+      | 'totalVisits'
+      | 'monthlyVisits'
+      | 'lastVisit'
+      | 'lastVisitDate'
+      | 'attendanceHistory'
+      | 'timeline'
+      | 'membershipHistory'
     >
   ) => {
-    const newMember = await gymService.createMember(organization.id, memberData, members.length);
+    try {
+      const newMember = await gymService.createMember(organization.id, memberData, members.length);
 
-    const updatedMembers = [newMember, ...members];
-    setMembers(updatedMembers);
+      const updatedMembers = [newMember, ...members];
+      setMembers(updatedMembers);
 
-    const updatedPlans = plans.map((p) =>
-      p.id === memberData.planId ? { ...p, activeMembersCount: p.activeMembersCount + 1 } : p
-    );
-    setPlans(updatedPlans);
+      const updatedPlans = plans.map((p) =>
+        p.id === memberData.planId ? { ...p, activeMembersCount: p.activeMembersCount + 1 } : p
+      );
+      setPlans(updatedPlans);
 
-    refreshStats(updatedMembers, checkIns, payments, organization.peakCapacity);
+      refreshStats(updatedMembers, checkIns, payments, organization.peakCapacity);
 
-    addToast({
-      title: 'Member Enrolled',
-      message: `${newMember.name} enrolled under ${newMember.planName} (${newMember.memberCode}).`,
-      type: 'success',
-    });
+      addToast({
+        title: 'Member Enrolled',
+        message: `${newMember.name} registered under ${newMember.planName} (${newMember.memberCode}).`,
+        type: 'success',
+      });
+    } catch (err: any) {
+      addToast({
+        title: 'Enrollment Error',
+        message: err?.message || 'Failed to enroll member.',
+        type: 'error',
+      });
+      throw err;
+    }
+  };
+
+  const renewMembership = async (payload: RenewalPayload) => {
+    const member = members.find((m) => m.id === payload.memberId);
+    const plan = plans.find((p) => p.id === payload.planId) || plans[0];
+    if (!member || !plan) return;
+
+    try {
+      const { newMembership, payment, newExpiryDate, daysRemaining } = await gymService.renewMembership(
+        organization.id,
+        member,
+        plan,
+        payload,
+        payments.length
+      );
+
+      const updatedPayments = [payment, ...payments];
+      setPayments(updatedPayments);
+
+      const updatedMembers = members.map((m) => {
+        if (m.id === payload.memberId) {
+          return {
+            ...m,
+            planId: plan.id,
+            planName: plan.name,
+            status: 'active' as const,
+            expiryDate: newExpiryDate,
+            daysRemaining,
+            paymentStatus: 'paid' as const,
+            pendingAmountINR: 0,
+            membershipHistory: [newMembership, ...(m.membershipHistory || [])],
+            timeline: [
+              {
+                id: 'tim-' + Date.now(),
+                type: 'renewal' as const,
+                title: `Membership Renewed — ${plan.name}`,
+                description: `Extended validity until ${newExpiryDate} (Invoice: ${payment.invoiceNumber})`,
+                timestamp: 'Just now',
+              },
+              ...m.timeline,
+            ],
+          };
+        }
+        return m;
+      });
+
+      setMembers(updatedMembers);
+      refreshStats(updatedMembers, checkIns, updatedPayments, organization.peakCapacity);
+
+      addToast({
+        title: 'Membership Renewed',
+        message: `${member.name} successfully renewed on ${plan.name} until ${newExpiryDate}.`,
+        type: 'success',
+      });
+    } catch (err: any) {
+      addToast({
+        title: 'Renewal Failed',
+        message: err?.message || 'Could not process renewal transaction.',
+        type: 'error',
+      });
+      throw err;
+    }
   };
 
   const updateMemberStatus = (memberId: string, status: MemberStatus) => {
@@ -314,7 +519,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               id: 'tim-' + Date.now(),
               type: 'status_change' as const,
               title: `Status Changed to ${status.toUpperCase()}`,
-              description: `Member status updated in dashboard`,
+              description: `Member status updated in operations portal`,
               timestamp: 'Just now',
             },
             ...m.timeline,
@@ -329,50 +534,61 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     addToast({
       title: 'Status Updated',
-      message: `Member status updated to ${status}.`,
+      message: `Member status set to ${status}.`,
       type: 'info',
     });
   };
 
   const recordPayment = async (paymentData: Omit<PaymentTransaction, 'id' | 'invoiceNumber'>) => {
-    const newPayment = await gymService.recordPayment(organization.id, paymentData, payments.length);
+    try {
+      const newPayment = await gymService.recordPayment(organization.id, paymentData, payments.length);
 
-    const updatedPayments = [newPayment, ...payments];
-    setPayments(updatedPayments);
+      const updatedPayments = [newPayment, ...payments];
+      setPayments(updatedPayments);
 
-    const updatedMembers = members.map((m) => {
-      if (m.id === paymentData.memberId) {
-        return {
-          ...m,
-          paymentStatus: 'paid' as const,
-          pendingAmountINR: 0,
-          status: m.status === 'expired' ? ('active' as const) : m.status,
-          timeline: [
-            {
-              id: 'tim-' + Date.now(),
-              type: 'payment' as const,
-              title: `Payment Received — ₹${paymentData.totalINR.toLocaleString('en-IN')}`,
-              description: `Invoice ${newPayment.invoiceNumber} paid via ${paymentData.paymentMethod || 'Direct'}`,
-              timestamp: 'Just now',
-            },
-            ...m.timeline,
-          ],
-        };
-      }
-      return m;
-    });
+      const updatedMembers = members.map((m) => {
+        if (m.id === paymentData.memberId) {
+          return {
+            ...m,
+            paymentStatus: 'paid' as const,
+            pendingAmountINR: 0,
+            status: m.status === 'expired' ? ('active' as const) : m.status,
+            timeline: [
+              {
+                id: 'tim-' + Date.now(),
+                type: 'payment' as const,
+                title: `Payment Received — ₹${paymentData.totalINR.toLocaleString('en-IN')}`,
+                description: `Invoice ${newPayment.invoiceNumber} paid via ${paymentData.paymentMethod || 'Direct'}`,
+                timestamp: 'Just now',
+              },
+              ...m.timeline,
+            ],
+          };
+        }
+        return m;
+      });
 
-    setMembers(updatedMembers);
-    refreshStats(updatedMembers, checkIns, updatedPayments, organization.peakCapacity);
+      setMembers(updatedMembers);
+      refreshStats(updatedMembers, checkIns, updatedPayments, organization.peakCapacity);
 
-    addToast({
-      title: 'Payment Recorded',
-      message: `Payment of ₹${paymentData.totalINR.toLocaleString('en-IN')} recorded for ${paymentData.memberName} (${newPayment.invoiceNumber}).`,
-      type: 'success',
-    });
+      addToast({
+        title: 'Payment Recorded',
+        message: `₹${paymentData.totalINR.toLocaleString('en-IN')} recorded for ${paymentData.memberName} (${newPayment.invoiceNumber}).`,
+        type: 'success',
+      });
+    } catch (err: any) {
+      addToast({
+        title: 'Payment Error',
+        message: err?.message || 'Failed to record payment.',
+        type: 'error',
+      });
+      throw err;
+    }
   };
 
-  const createPlan = (planData: Omit<MembershipPlan, 'id' | 'activeMembersCount' | 'totalRevenueINR' | 'expiringThisWeek'>) => {
+  const createPlan = (
+    planData: Omit<MembershipPlan, 'id' | 'activeMembersCount' | 'totalRevenueINR' | 'expiringThisWeek'>
+  ) => {
     const newPlan: MembershipPlan = {
       ...planData,
       id: 'plan-' + (plans.length + 1),
@@ -384,8 +600,8 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPlans((prev) => [...prev, newPlan]);
 
     addToast({
-      title: 'Plan Created',
-      message: `New plan "${newPlan.name}" published at ₹${newPlan.priceINR.toLocaleString('en-IN')}.`,
+      title: 'Plan Published',
+      message: `New plan "${newPlan.name}" configured at ₹${newPlan.priceINR.toLocaleString('en-IN')}.`,
       type: 'success',
     });
   };
@@ -422,7 +638,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 id: 'tim-' + Date.now(),
                 type: 'reminder_sent',
                 title: 'WhatsApp Renewal Link Sent',
-                description: customMessage || 'Direct WhatsApp renewal prompt dispatched with 1-click payment link.',
+                description: customMessage || 'Direct WhatsApp renewal prompt dispatched with 1-click checkout link.',
                 timestamp: 'Just now',
               },
               ...m.timeline,
@@ -437,7 +653,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     addToast({
       title: 'WhatsApp Dispatched',
-      message: `Renewal communication successfully sent to ${member.name} (${member.phone}).`,
+      message: `Renewal communication successfully dispatched to ${member.name} (${member.phone}).`,
       type: 'success',
     });
   };
@@ -446,42 +662,60 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
 
-    await gymService.freezeMembership(organization.id, memberId, days, reason);
+    try {
+      const { newExpiryDate, daysRemaining } = await gymService.freezeMembership(
+        organization.id,
+        member,
+        days,
+        reason
+      );
 
-    const updatedMembers = members.map((m) => {
-      if (m.id === memberId) {
-        const currentExp = new Date(m.expiryDate);
-        currentExp.setDate(currentExp.getDate() + days);
-        const newExpStr = currentExp.toISOString().split('T')[0];
+      const updatedMembers = members.map((m) => {
+        if (m.id === memberId) {
+          return {
+            ...m,
+            status: 'frozen' as const,
+            expiryDate: newExpiryDate,
+            daysRemaining,
+            timeline: [
+              {
+                id: 'tim-' + Date.now(),
+                type: 'status_change' as const,
+                title: `Membership Frozen (${days} Days)`,
+                description: `Paused until expiry adjusted to ${newExpiryDate}. Reason: ${reason}`,
+                timestamp: 'Just now',
+              },
+              ...m.timeline,
+            ],
+          };
+        }
+        return m;
+      });
 
-        return {
-          ...m,
-          status: 'frozen' as const,
-          expiryDate: newExpStr,
-          daysRemaining: m.daysRemaining + days,
-          timeline: [
-            {
-              id: 'tim-' + Date.now(),
-              type: 'status_change' as const,
-              title: `Membership Frozen (${days} Days)`,
-              description: `Paused until expiry adjusted to ${newExpStr}. Reason: ${reason}`,
-              timestamp: 'Just now',
-            },
-            ...m.timeline,
-          ],
-        };
-      }
-      return m;
-    });
+      setMembers(updatedMembers);
+      refreshStats(updatedMembers, checkIns, payments, organization.peakCapacity);
 
-    setMembers(updatedMembers);
-    refreshStats(updatedMembers, checkIns, payments, organization.peakCapacity);
+      addToast({
+        title: 'Membership Frozen',
+        message: `${member.name}'s plan paused for ${days} days. Expiry adjusted to ${newExpiryDate}.`,
+        type: 'info',
+      });
+    } catch (err: any) {
+      addToast({
+        title: 'Freeze Failed',
+        message: err?.message || 'Could not freeze membership.',
+        type: 'error',
+      });
+      throw err;
+    }
+  };
 
-    addToast({
-      title: 'Membership Frozen',
-      message: `${member.name}'s plan paused for ${days} days. Expiry adjusted.`,
-      type: 'info',
-    });
+  const openRenewModal = (member: Member) => {
+    setRenewModalData({ isOpen: true, member });
+  };
+
+  const closeRenewModal = () => {
+    setRenewModalData({ isOpen: false, member: null });
   };
 
   const openPaymentModal = (member?: Member | null) => {
@@ -510,6 +744,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         viewMemberProfile,
         organization,
         currentUser,
+        appMode,
         signOut,
         members,
         plans,
@@ -518,7 +753,9 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         gymStats,
         isLoadingData,
         checkInMember,
+        checkOutMember,
         addMember,
+        renewMembership,
         updateMemberStatus,
         recordPayment,
         createPlan,
@@ -535,6 +772,9 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCreatePlanModalOpen,
         isCommandPaletteOpen,
         setCommandPaletteOpen,
+        renewModalData,
+        openRenewModal,
+        closeRenewModal,
         whatsAppModalData,
         openWhatsAppModal,
         closeWhatsAppModal,

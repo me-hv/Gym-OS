@@ -1,12 +1,30 @@
-export type MemberStatus = 'active' | 'expiring' | 'expired' | 'frozen';
-export type PaymentStatus = 'paid' | 'pending' | 'overdue';
+export type MemberStatus = 'active' | 'expiring' | 'expired' | 'frozen' | 'cancelled';
+export type PaymentStatus = 'paid' | 'pending' | 'overdue' | 'refunded';
 export type PaymentMethod = 'UPI' | 'Credit Card' | 'Debit Card' | 'Cash' | 'Net Banking';
-export type WorkoutGoal = 'Hypertrophy & Strength' | 'Fat Loss & HIIT' | 'Mobility & Rehab' | 'Powerlifting' | 'General Fitness';
+export type WorkoutGoal =
+  | 'Hypertrophy & Strength'
+  | 'Fat Loss & HIIT'
+  | 'Mobility & Rehab'
+  | 'Powerlifting'
+  | 'General Fitness';
+
+export type UserRole = 'owner' | 'admin' | 'trainer' | 'front_desk';
+export type AppMode = 'production' | 'demo';
+
+export interface TaxBreakdown {
+  taxableAmountINR: number;
+  cgstINR: number;
+  sgstINR: number;
+  igstINR?: number;
+  taxRatePercent: number;
+  totalINR: number;
+}
 
 export interface AttendanceHistoryItem {
   id: string;
   date: string; // YYYY-MM-DD
   time: string; // e.g. "07:15 AM"
+  checkOutTime?: string; // e.g. "08:30 AM"
   durationMinutes?: number;
   workoutType?: string;
   trainerName?: string;
@@ -14,11 +32,22 @@ export interface AttendanceHistoryItem {
 
 export interface ActivityTimelineItem {
   id: string;
-  type: 'checkin' | 'payment' | 'renewal' | 'reminder_sent' | 'note' | 'status_change';
+  type: 'checkin' | 'checkout' | 'payment' | 'renewal' | 'reminder_sent' | 'note' | 'status_change';
   title: string;
   description: string;
   timestamp: string;
   author?: string;
+}
+
+export interface MembershipHistoryItem {
+  id: string;
+  planId: string;
+  planName: string;
+  startDate: string;
+  expiryDate: string;
+  amountINR: number;
+  status: MemberStatus;
+  createdAt: string;
 }
 
 export interface Member {
@@ -54,8 +83,10 @@ export interface Member {
     phone: string;
   };
   notes: string;
+  isCurrentlyOnFloor?: boolean;
   attendanceHistory: AttendanceHistoryItem[];
   timeline: ActivityTimelineItem[];
+  membershipHistory?: MembershipHistoryItem[];
 }
 
 export interface MembershipPlan {
@@ -81,11 +112,13 @@ export interface AttendanceRecord {
   memberAvatar?: string;
   planName: string;
   checkInTime: string; // e.g. "07:32 AM"
+  checkOutTime?: string; // e.g. "08:45 AM"
   date: string; // YYYY-MM-DD
   status: MemberStatus;
   trainerName: string;
   workoutGoal: WorkoutGoal;
   isToday: boolean;
+  isOnFloor?: boolean;
 }
 
 export interface PaymentTransaction {
@@ -136,4 +169,12 @@ export interface GymStats {
   overdueMembersCount: number;
   newSignupsThisMonth: number;
   retentionRatePercent: number;
+}
+
+export interface RenewalPayload {
+  memberId: string;
+  planId: string;
+  paymentMethod: PaymentMethod;
+  notes?: string;
+  customStartDate?: string;
 }

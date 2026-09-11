@@ -23,6 +23,9 @@ import {
   Dumbbell,
   CheckCircle2,
   AlertTriangle,
+  RefreshCw,
+  LogOut,
+  Layers,
 } from 'lucide-react';
 import { Member, PaymentTransaction } from '../types';
 
@@ -32,9 +35,11 @@ export const MemberProfileView: React.FC = () => {
     members,
     setActiveView,
     checkInMember,
+    checkOutMember,
     openWhatsAppModal,
     openPaymentModal,
     openInvoiceModal,
+    openRenewModal,
     payments,
     freezeMembership,
   } = useGym();
@@ -42,6 +47,7 @@ export const MemberProfileView: React.FC = () => {
   const [isFreezeModalOpen, setIsFreezeModalOpen] = useState(false);
   const [freezeDays, setFreezeDays] = useState(14);
   const [freezeReason, setFreezeReason] = useState('Medical hold / travel');
+  const [isFreezing, setIsFreezing] = useState(false);
 
   const member = members.find((m) => m.id === selectedMemberId) || members[0];
 
@@ -59,10 +65,18 @@ export const MemberProfileView: React.FC = () => {
   // Payments for this member
   const memberPayments = payments.filter((p) => p.memberId === member.id);
 
-  const handleFreeze = (e: React.FormEvent) => {
+  const handleFreeze = async (e: React.FormEvent) => {
     e.preventDefault();
-    freezeMembership(member.id, freezeDays, freezeReason);
-    setIsFreezeModalOpen(false);
+    if (isFreezing) return;
+    setIsFreezing(true);
+    try {
+      await freezeMembership(member.id, freezeDays, freezeReason);
+      setIsFreezeModalOpen(false);
+    } catch (err) {
+      console.error('Freeze error:', err);
+    } finally {
+      setIsFreezing(false);
+    }
   };
 
   // 30-day heatmap simulator for attendance
@@ -103,14 +117,35 @@ export const MemberProfileView: React.FC = () => {
 
         {/* Profile Action Toolbar */}
         <div className="flex items-center flex-wrap gap-2">
-          {/* Quick check-in */}
+          {/* Quick check-in / check-out */}
+          {member.isCurrentlyOnFloor ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              leftIcon={<LogOut className="w-3.5 h-3.5 text-sky-400" />}
+              onClick={() => checkOutMember(member.id)}
+            >
+              Log Check-Out
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="secondary"
+              leftIcon={<UserCheck className="w-3.5 h-3.5 text-brand-400" />}
+              onClick={() => checkInMember(member.id)}
+            >
+              Log Check-In
+            </Button>
+          )}
+
+          {/* Renew Plan Action (Core Phase 3 Feature) */}
           <Button
             size="sm"
-            variant="secondary"
-            leftIcon={<UserCheck className="w-3.5 h-3.5 text-brand-400" />}
-            onClick={() => checkInMember(member.id)}
+            variant="primary"
+            leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+            onClick={() => openRenewModal(member)}
           >
-            Log Check-In
+            Renew Membership
           </Button>
 
           {/* WhatsApp Reminder */}
@@ -120,7 +155,7 @@ export const MemberProfileView: React.FC = () => {
             leftIcon={<Send className="w-3.5 h-3.5" />}
             onClick={() => openWhatsAppModal(member)}
           >
-            Send WhatsApp
+            WhatsApp
           </Button>
 
           {/* Settle Balance */}
@@ -141,6 +176,7 @@ export const MemberProfileView: React.FC = () => {
             variant="secondary"
             leftIcon={<PauseCircle className="w-3.5 h-3.5" />}
             onClick={() => setIsFreezeModalOpen(true)}
+            disabled={member.status === 'expired' || member.status === 'cancelled'}
           >
             Freeze Plan
           </Button>
@@ -164,6 +200,11 @@ export const MemberProfileView: React.FC = () => {
               <Badge variant={member.status} size="md">
                 {member.status.toUpperCase()}
               </Badge>
+              {member.isCurrentlyOnFloor && (
+                <span className="text-xs font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-md font-semibold">
+                  Currently On Floor
+                </span>
+              )}
               {member.lockerNumber && (
                 <span className="text-xs font-mono text-zinc-400 bg-surface-200 px-2 py-0.5 rounded-md">
                   Locker {member.lockerNumber}
@@ -234,8 +275,15 @@ export const MemberProfileView: React.FC = () => {
           {/* Membership Plan Specs */}
           <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
             <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center justify-between">
-              <span>Membership Parameters</span>
-              <span className="text-brand-400 font-mono text-[11px]">Active Plan</span>
+              <span>Active Subscription Tier</span>
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={() => openRenewModal(member)}
+                className="text-brand-400 hover:text-brand-300"
+              >
+                Renew / Change Tier →
+              </Button>
             </h3>
 
             <div className="space-y-3 text-xs">
@@ -261,6 +309,44 @@ export const MemberProfileView: React.FC = () => {
                   {member.paymentStatus}
                 </Badge>
               </div>
+            </div>
+          </div>
+
+          {/* Historical Membership Subscriptions (Preserved History) */}
+          <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-brand-400" />
+              <span>Membership History Ledger</span>
+            </h3>
+
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {member.membershipHistory && member.membershipHistory.length > 0 ? (
+                member.membershipHistory.map((hist, idx) => (
+                  <div
+                    key={hist.id || idx}
+                    className="p-3 rounded-xl bg-surface-200/80 text-xs flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="font-semibold text-white">{hist.planName}</div>
+                      <div className="text-[10px] text-zinc-400 font-mono mt-0.5">
+                        {hist.startDate} → {hist.expiryDate}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-mono font-semibold text-zinc-300">
+                        ₹{hist.amountINR.toLocaleString('en-IN')}
+                      </div>
+                      <Badge variant={hist.status} size="xs" className="mt-0.5">
+                        {hist.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-3.5 rounded-xl bg-surface-200/60 text-xs text-zinc-400 text-center">
+                  Initial enrollment: {member.planName}
+                </div>
+              )}
             </div>
           </div>
 
@@ -388,7 +474,7 @@ export const MemberProfileView: React.FC = () => {
 
           {/* Activity & Communications Timeline */}
           <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
-            <h3 className="text-sm font-bold text-white mb-4 tracking-tight">Activity & Communication Timeline</h3>
+            <h3 className="text-sm font-bold text-white mb-4 tracking-tight">Activity & Audit Timeline</h3>
 
             <div className="relative pl-6 space-y-4 border-l border-white/[0.06]">
               {member.timeline.map((item) => (
@@ -417,11 +503,11 @@ export const MemberProfileView: React.FC = () => {
         maxWidth="md"
         footer={
           <>
-            <Button variant="ghost" onClick={() => setIsFreezeModalOpen(false)}>
+            <Button variant="ghost" onClick={() => setIsFreezeModalOpen(false)} disabled={isFreezing}>
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleFreeze}>
-              Confirm Freeze & Adjust Expiry
+            <Button variant="primary" onClick={handleFreeze} disabled={isFreezing}>
+              {isFreezing ? 'Processing Freeze...' : 'Confirm Freeze & Adjust Expiry'}
             </Button>
           </>
         }
@@ -432,7 +518,7 @@ export const MemberProfileView: React.FC = () => {
             type="number"
             value={freezeDays}
             onChange={(e) => setFreezeDays(Number(e.target.value))}
-            min={7}
+            min={1}
             max={60}
             required
           />
@@ -444,7 +530,7 @@ export const MemberProfileView: React.FC = () => {
             required
           />
           <p className="text-xs text-zinc-400 bg-surface-200 p-3 rounded-xl">
-            Freezing by {freezeDays} days will automatically extend this athlete's expiry date forward by {freezeDays} days.
+            Freezing by {freezeDays} days will automatically shift this athlete's expiry date forward by {freezeDays} days and record an immutable audit entry.
           </p>
         </form>
       </Modal>

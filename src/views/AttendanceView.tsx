@@ -17,6 +17,7 @@ import {
   Filter,
   Users,
   ShieldCheck,
+  LogOut,
 } from 'lucide-react';
 
 export const AttendanceView: React.FC = () => {
@@ -27,6 +28,7 @@ export const AttendanceView: React.FC = () => {
     setCheckInModalOpen,
     viewMemberProfile,
     openWhatsAppModal,
+    checkOutMember,
   } = useGym();
 
   const [activeTab, setActiveTab] = useState<'today' | 'absentees'>('today');
@@ -252,7 +254,19 @@ export const AttendanceView: React.FC = () => {
                       </td>
 
                       {/* Action */}
-                      <td className="py-3.5 px-5 text-right">
+                      <td className="py-3.5 px-5 text-right flex items-center justify-end gap-2">
+                        {!item.checkOutTime && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              checkOutMember(item.memberId);
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-300 hover:text-sky-200 bg-sky-500/10 hover:bg-sky-500/20 px-2 py-0.5 rounded transition-colors"
+                          >
+                            <LogOut className="w-3 h-3" />
+                            <span>Check Out</span>
+                          </button>
+                        )}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

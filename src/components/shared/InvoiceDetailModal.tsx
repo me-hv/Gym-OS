@@ -6,7 +6,7 @@ import { Badge } from '../ui/Badge';
 import { Printer, Download, CheckCircle, Building2, Phone, Mail, FileText } from 'lucide-react';
 
 export const InvoiceDetailModal: React.FC = () => {
-  const { invoiceModalData, closeInvoiceModal } = useGym();
+  const { invoiceModalData, closeInvoiceModal, organization } = useGym();
   const { isOpen, payment } = invoiceModalData;
 
   if (!isOpen || !payment) return null;
@@ -50,14 +50,16 @@ export const InvoiceDetailModal: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2.5 h-2.5 rounded-sm bg-brand-500"></span>
-              <span className="text-base font-bold tracking-tight text-white font-mono">
-                PULSE FITNESS & PERFORMANCE
+              <span className="text-base font-bold tracking-tight text-white font-mono uppercase">
+                {organization.name}
               </span>
             </div>
             <p className="text-xs text-zinc-400">
-              #42, 100 Feet Road, Indiranagar, Bengaluru, KA 560038
+              {organization.address || '#42, 100 Feet Road'}, {organization.city}
             </p>
-            <p className="text-xs text-zinc-400 mt-0.5">GSTIN: 29AABCU9603R1ZM</p>
+            {organization.gstin && (
+              <p className="text-xs text-zinc-400 mt-0.5">GSTIN: {organization.gstin}</p>
+            )}
           </div>
           <div className="text-right">
             <Badge variant={payment.status} size="sm">
@@ -146,7 +148,7 @@ export const InvoiceDetailModal: React.FC = () => {
         {/* Footer Note */}
         <div className="pt-4 border-t border-white/[0.04] text-[11px] text-zinc-400 flex items-center justify-between">
           <span>Processed by {payment.collectedBy}</span>
-          <span>Thank you for training with Pulse Fitness!</span>
+          <span>Thank you for training with {organization.name}!</span>
         </div>
       </div>
     </Modal>

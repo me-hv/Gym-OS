@@ -9,6 +9,7 @@ import { AddMemberModal } from '../shared/AddMemberModal';
 import { RecordPaymentModal } from '../shared/RecordPaymentModal';
 import { InvoiceDetailModal } from '../shared/InvoiceDetailModal';
 import { CreatePlanModal } from '../shared/CreatePlanModal';
+import { RenewMembershipModal } from '../shared/RenewMembershipModal';
 
 export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
@@ -34,6 +35,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       <CommandPalette />
       <WhatsAppRenewalModal />
       <QuickCheckInModal />
+      <RenewMembershipModal />
       <AddMemberModal />
       <RecordPaymentModal />
       <InvoiceDetailModal />
