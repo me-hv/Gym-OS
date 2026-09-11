@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../lib/supabase/client';
-import { Zap, ShieldCheck, ArrowRight, Lock, Mail, Building2, Sparkles } from 'lucide-react';
+import { Zap, ShieldCheck, ArrowRight, Lock, Mail, Building2, Sparkles, User, Users } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,8 +26,12 @@ export default function LoginPage() {
       });
 
       if (error) {
-        // In local mode or placeholder credentials, allow demo access
-        if (email === 'owner@pulsefitness.in') {
+        // If live Supabase not yet seeded with real auth users or running offline, allow demo access
+        if (
+          email === 'owner@pulsefitness.in' ||
+          email === 'desk@pulsefitness.in' ||
+          email === 'owner@ironhouse.in'
+        ) {
           router.push('/');
           return;
         }
@@ -43,12 +47,15 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = (demoRole: 'owner' | 'front_desk') => {
-    if (demoRole === 'owner') {
+  const handleDemoLogin = (role: 'owner_gym1' | 'front_desk_gym1' | 'owner_gym2') => {
+    if (role === 'owner_gym1') {
       setEmail('owner@pulsefitness.in');
       setPassword('gymos2026');
-    } else {
+    } else if (role === 'front_desk_gym1') {
       setEmail('desk@pulsefitness.in');
+      setPassword('gymos2026');
+    } else {
+      setEmail('owner@ironhouse.in');
       setPassword('gymos2026');
     }
     router.push('/');
@@ -75,19 +82,6 @@ export default function LoginPage() {
           <p className="text-xs text-zinc-400 mt-1.5">
             The Operating System for Independent Gyms & Clubs
           </p>
-        </div>
-
-        {/* Tenant Gym Badge */}
-        <div className="mb-6 p-3.5 rounded-2xl bg-surface-200/80 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-400 shrink-0">
-            <Building2 className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-xs font-semibold text-zinc-200 truncate">
-              Pulse Fitness & Performance
-            </div>
-            <div className="text-[10px] text-zinc-400 font-mono mt-0.5">Tenant ID: IND-BLR-042</div>
-          </div>
         </div>
 
         {/* Form */}
@@ -146,35 +140,51 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* 1-Click Demo Evaluation Credentials */}
+        {/* 1-Click Evaluation Credentials for Multi-Tenant Testing */}
         <div className="mt-6 pt-5 border-t border-white/[0.04]">
           <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-2.5 font-medium">
             <span className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Pilot Quick Sign-In:
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Multi-Tenant Pilot Quick Switch:
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => handleDemoLogin('owner')}
+              onClick={() => handleDemoLogin('owner_gym1')}
               className="p-3 rounded-xl bg-surface-200 hover:bg-surface-100 text-left transition-colors group"
             >
-              <div className="text-xs font-semibold text-white group-hover:text-brand-300">
-                Gym Owner
+              <div className="text-xs font-semibold text-white group-hover:text-brand-300 flex items-center gap-1">
+                <span>Pulse Fitness</span>
               </div>
-              <div className="text-[10px] text-zinc-400 font-mono mt-0.5">Full Admin Access</div>
+              <div className="text-[10px] text-zinc-400 font-mono mt-0.5">Owner (Bengaluru)</div>
             </button>
 
             <button
               type="button"
-              onClick={() => handleDemoLogin('front_desk')}
+              onClick={() => handleDemoLogin('front_desk_gym1')}
               className="p-3 rounded-xl bg-surface-200 hover:bg-surface-100 text-left transition-colors group"
             >
               <div className="text-xs font-semibold text-white group-hover:text-brand-300">
-                Front Desk
+                Pulse Front Desk
               </div>
-              <div className="text-[10px] text-zinc-400 font-mono mt-0.5">Check-in / Desk</div>
+              <div className="text-[10px] text-zinc-400 font-mono mt-0.5">Reception Desk</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleDemoLogin('owner_gym2')}
+              className="col-span-2 p-3 rounded-xl bg-surface-200 hover:bg-surface-100 text-left transition-colors group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold text-white group-hover:text-amber-300">
+                  Tenant 2: Iron House Fitness (Mumbai)
+                </div>
+                <span className="text-[9px] font-mono bg-amber-500/15 text-amber-300 px-1.5 py-0.5 rounded">
+                  Isolated Gym
+                </span>
+              </div>
+              <div className="text-[10px] text-zinc-400 font-mono mt-0.5">Test RLS Data Isolation</div>
             </button>
           </div>
         </div>

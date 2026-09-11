@@ -39,8 +39,8 @@ export const QuickCheckInModal: React.FC = () => {
       )
     : [];
 
-  const handlePerformCheckIn = (memberToLog: any) => {
-    const res = checkInMember(memberToLog.id);
+  const handlePerformCheckIn = async (memberToLog: any) => {
+    const res = await checkInMember(memberToLog.id);
     if (res.success) {
       setLastCheckIn(memberToLog);
       setSelectedMember(null);

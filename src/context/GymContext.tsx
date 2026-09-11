@@ -35,13 +35,13 @@ interface GymContextType {
   isLoadingData: boolean;
 
   // Actions
-  checkInMember: (memberId: string) => { success: boolean; message: string };
-  addMember: (member: Omit<Member, 'id' | 'memberCode' | 'daysRemaining' | 'attendanceRate' | 'weeklyFrequency' | 'totalVisits' | 'monthlyVisits' | 'lastVisit' | 'lastVisitDate' | 'attendanceHistory' | 'timeline'>) => void;
+  checkInMember: (memberId: string) => Promise<{ success: boolean; message: string }>;
+  addMember: (member: Omit<Member, 'id' | 'memberCode' | 'daysRemaining' | 'attendanceRate' | 'weeklyFrequency' | 'totalVisits' | 'monthlyVisits' | 'lastVisit' | 'lastVisitDate' | 'attendanceHistory' | 'timeline'>) => Promise<void>;
   updateMemberStatus: (memberId: string, status: MemberStatus) => void;
-  recordPayment: (payment: Omit<PaymentTransaction, 'id' | 'invoiceNumber'>) => void;
+  recordPayment: (payment: Omit<PaymentTransaction, 'id' | 'invoiceNumber'>) => Promise<void>;
   createPlan: (plan: Omit<MembershipPlan, 'id' | 'activeMembersCount' | 'totalRevenueINR' | 'expiringThisWeek'>) => void;
-  sendWhatsAppRenewal: (memberId: string, customMessage?: string) => void;
-  freezeMembership: (memberId: string, days: number, reason: string) => void;
+  sendWhatsAppRenewal: (memberId: string, customMessage?: string) => Promise<void>;
+  freezeMembership: (memberId: string, days: number, reason: string) => Promise<void>;
 
   // Toasts
   toasts: ToastItem[];
@@ -131,15 +131,17 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (!isMounted) return;
         setOrganization(org);
 
-        const [loadedMembers, loadedPlans] = await Promise.all([
+        const [loadedMembers, loadedPlans, loadedPayments] = await Promise.all([
           gymService.getMembers(session.organizationId),
           gymService.getPlans(session.organizationId),
+          gymService.getPayments(session.organizationId),
         ]);
 
         if (!isMounted) return;
         setMembers(loadedMembers);
         setPlans(loadedPlans);
-        refreshStats(loadedMembers, INITIAL_CHECKINS, INITIAL_PAYMENTS, org.peakCapacity);
+        setPayments(loadedPayments);
+        refreshStats(loadedMembers, INITIAL_CHECKINS, loadedPayments, org.peakCapacity);
       } catch (err) {
         console.error('Failed loading tenant data from Supabase:', err);
       } finally {
@@ -196,7 +198,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const checkInMember = (memberId: string): { success: boolean; message: string } => {
+  const checkInMember = async (memberId: string): Promise<{ success: boolean; message: string }> => {
     const member = members.find((m) => m.id === memberId || m.memberCode === memberId);
     if (!member) {
       addToast({
@@ -221,27 +223,14 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
 
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    const dateStr = now.toISOString().split('T')[0];
-
-    const newRecord: AttendanceRecord = {
-      id: 'rec-' + Date.now(),
-      memberId: member.id,
-      memberCode: member.memberCode,
-      memberName: member.name,
-      memberAvatar: member.avatarUrl,
-      planName: member.planName,
-      checkInTime: timeStr,
-      date: dateStr,
-      status: member.status,
-      trainerName: member.assignedTrainer,
-      workoutGoal: member.goal,
-      isToday: true,
-    };
+    const newRecord = await gymService.checkInMember(organization.id, member, 'Floor Workout');
 
     const updatedCheckIns = [newRecord, ...checkIns];
     setCheckIns(updatedCheckIns);
+
+    const now = new Date();
+    const timeStr = newRecord.checkInTime;
+    const dateStr = newRecord.date;
 
     const updatedMembers = members.map((m) => {
       if (m.id === member.id) {
@@ -289,40 +278,13 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: `${member.name} checked in successfully` };
   };
 
-  const addMember = (
+  const addMember = async (
     memberData: Omit<
       Member,
       'id' | 'memberCode' | 'daysRemaining' | 'attendanceRate' | 'weeklyFrequency' | 'totalVisits' | 'monthlyVisits' | 'lastVisit' | 'lastVisitDate' | 'attendanceHistory' | 'timeline'
     >
   ) => {
-    const newId = 'mem-' + (100 + members.length + 1);
-    const code = `GYM-2024-${String(members.length + 1).padStart(3, '0')}`;
-    const now = new Date();
-    const expiry = new Date(memberData.expiryDate);
-    const diffDays = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-    const newMember: Member = {
-      ...memberData,
-      id: newId,
-      memberCode: code,
-      daysRemaining: diffDays,
-      lastVisit: 'Never (New Member)',
-      lastVisitDate: now.toISOString().split('T')[0],
-      attendanceRate: 100,
-      weeklyFrequency: 0,
-      totalVisits: 0,
-      monthlyVisits: 0,
-      attendanceHistory: [],
-      timeline: [
-        {
-          id: 'tim-' + Date.now(),
-          type: 'status_change',
-          title: 'Enrolled in Gym',
-          description: `Joined on ${memberData.planName} plan`,
-          timestamp: 'Just now',
-        },
-      ],
-    };
+    const newMember = await gymService.createMember(organization.id, memberData, members.length);
 
     const updatedMembers = [newMember, ...members];
     setMembers(updatedMembers);
@@ -336,7 +298,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     addToast({
       title: 'Member Enrolled',
-      message: `${newMember.name} enrolled under ${newMember.planName} (${code}).`,
+      message: `${newMember.name} enrolled under ${newMember.planName} (${newMember.memberCode}).`,
       type: 'success',
     });
   };
@@ -372,13 +334,8 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const recordPayment = (paymentData: Omit<PaymentTransaction, 'id' | 'invoiceNumber'>) => {
-    const invNum = `INV-2026-${String(payments.length + 101).padStart(4, '0')}`;
-    const newPayment: PaymentTransaction = {
-      ...paymentData,
-      id: 'pay-' + Date.now(),
-      invoiceNumber: invNum,
-    };
+  const recordPayment = async (paymentData: Omit<PaymentTransaction, 'id' | 'invoiceNumber'>) => {
+    const newPayment = await gymService.recordPayment(organization.id, paymentData, payments.length);
 
     const updatedPayments = [newPayment, ...payments];
     setPayments(updatedPayments);
@@ -395,7 +352,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               id: 'tim-' + Date.now(),
               type: 'payment' as const,
               title: `Payment Received — ₹${paymentData.totalINR.toLocaleString('en-IN')}`,
-              description: `Invoice ${invNum} paid via ${paymentData.paymentMethod || 'Direct'}`,
+              description: `Invoice ${newPayment.invoiceNumber} paid via ${paymentData.paymentMethod || 'Direct'}`,
               timestamp: 'Just now',
             },
             ...m.timeline,
@@ -410,7 +367,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     addToast({
       title: 'Payment Recorded',
-      message: `Payment of ₹${paymentData.totalINR.toLocaleString('en-IN')} recorded for ${paymentData.memberName} (${invNum}).`,
+      message: `Payment of ₹${paymentData.totalINR.toLocaleString('en-IN')} recorded for ${paymentData.memberName} (${newPayment.invoiceNumber}).`,
       type: 'success',
     });
   };
@@ -449,9 +406,11 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setWhatsAppModalData({ isOpen: false, member: null, defaultMessage: '' });
   };
 
-  const sendWhatsAppRenewal = (memberId: string, customMessage?: string) => {
+  const sendWhatsAppRenewal = async (memberId: string, customMessage?: string) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
+
+    await gymService.sendWhatsAppRenewal(organization.id, memberId, customMessage);
 
     setMembers((prev) =>
       prev.map((m) => {
@@ -483,9 +442,11 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const freezeMembership = (memberId: string, days: number, reason: string) => {
+  const freezeMembership = async (memberId: string, days: number, reason: string) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
+
+    await gymService.freezeMembership(organization.id, memberId, days, reason);
 
     const updatedMembers = members.map((m) => {
       if (m.id === memberId) {
