@@ -53,7 +53,7 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity duration-200"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-200"
         onClick={onClose}
       />
 
@@ -61,21 +61,21 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         className={twMerge(
           clsx(
-            'relative w-full rounded-xl bg-surface-300 border border-border shadow-modal z-10 overflow-hidden flex flex-col max-h-[90vh] animate-slide-down',
+            'relative w-full rounded-2xl bg-surface-300 shadow-modal z-10 overflow-hidden flex flex-col max-h-[90vh] animate-slide-down',
             maxWidthStyles[maxWidth]
           )
         )}
       >
         {/* Header */}
         {(title || subtitle) && (
-          <div className="flex items-start justify-between px-6 py-4.5 border-b border-border-subtle bg-surface-200/50">
+          <div className="flex items-start justify-between px-6 py-5 bg-surface-200/50">
             <div>
-              {title && <h3 className="text-base font-semibold text-zinc-100">{title}</h3>}
+              {title && <h3 className="text-base font-semibold text-white">{title}</h3>}
               {subtitle && <p className="text-xs text-zinc-400 mt-0.5">{subtitle}</p>}
             </div>
             <button
               onClick={onClose}
-              className="text-zinc-400 hover:text-zinc-200 p-1 rounded-md hover:bg-surface-100 transition-colors"
+              className="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-surface-100 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -87,7 +87,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-3.5 border-t border-border-subtle bg-surface-200/50 flex items-center justify-end gap-2.5">
+          <div className="px-6 py-4 bg-surface-200/50 flex items-center justify-end gap-2.5">
             {footer}
           </div>
         )}

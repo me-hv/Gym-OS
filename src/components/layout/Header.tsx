@@ -78,14 +78,14 @@ export const Header: React.FC = () => {
   const expiringMembers = members.filter((m) => m.status === 'expiring' || m.daysRemaining <= 7);
 
   return (
-    <header className="h-16 px-6 border-b border-border bg-surface-300/80 backdrop-blur-md sticky top-0 z-10 flex items-center justify-between gap-4">
+    <header className="h-16 px-6 bg-surface-300/60 backdrop-blur-md sticky top-0 z-10 flex items-center justify-between gap-4">
       {/* Page Title & Breadcrumb */}
       <div className="flex items-center gap-3 min-w-0">
         <div>
           <div className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
             <span>{currentViewMeta.category}</span>
             <ChevronRight className="w-3 h-3 text-zinc-600" />
-            <span className="text-zinc-300 font-semibold">{currentViewMeta.title}</span>
+            <span className="text-zinc-200 font-semibold">{currentViewMeta.title}</span>
           </div>
           <p className="text-xs text-zinc-400 truncate hidden lg:block">{currentViewMeta.subtitle}</p>
         </div>
@@ -96,17 +96,17 @@ export const Header: React.FC = () => {
         {/* Global Search Shortcut Trigger */}
         <button
           onClick={() => setCommandPaletteOpen(true)}
-          className="flex items-center gap-3 px-3 py-1.5 bg-surface-200 hover:bg-surface-100 border border-border-subtle hover:border-border rounded-lg text-xs text-zinc-400 transition-colors shadow-xs"
+          className="flex items-center gap-3 px-3.5 py-1.5 bg-surface-200 hover:bg-surface-100 rounded-lg text-xs text-zinc-400 transition-colors shadow-xs"
         >
-          <Search className="w-3.5 h-3.5 text-zinc-500" />
+          <Search className="w-3.5 h-3.5 text-zinc-400" />
           <span className="hidden sm:inline">Search athletes, plans, actions...</span>
-          <kbd className="hidden sm:inline-block font-mono text-[10px] text-zinc-400 bg-surface-100 px-1.5 py-0.5 rounded border border-border-subtle">
+          <kbd className="hidden sm:inline-block font-mono text-[10px] text-zinc-400 bg-surface-100 px-1.5 py-0.5 rounded">
             ⌘K
           </kbd>
         </button>
 
         {/* Live Capacity Indicator Pill */}
-        <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-200/80 border border-border-subtle text-xs">
+        <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-200/80 text-xs">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
@@ -140,12 +140,12 @@ export const Header: React.FC = () => {
         <div className="relative">
           <button
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className="p-2 rounded-lg bg-surface-200 hover:bg-surface-100 border border-border-subtle text-zinc-400 hover:text-white transition-colors relative"
+            className="p-2 rounded-lg bg-surface-200 hover:bg-surface-100 text-zinc-400 hover:text-white transition-colors relative"
             title="Operational Alerts"
           >
             <Bell className="w-4 h-4" />
             {gymStats.expiringIn7DaysCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 text-zinc-950 font-bold rounded-full text-[9px] flex items-center justify-center border border-surface-300">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 text-zinc-950 font-bold rounded-full text-[9px] flex items-center justify-center">
                 {gymStats.expiringIn7DaysCount}
               </span>
             )}
@@ -153,10 +153,10 @@ export const Header: React.FC = () => {
 
           {/* Notifications Dropdown */}
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-surface-300 border border-border rounded-xl shadow-modal z-50 p-3 animate-slide-down">
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-border-subtle">
+            <div className="absolute right-0 mt-2 w-80 bg-surface-300 rounded-xl shadow-modal z-50 p-3 animate-slide-down">
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.04]">
                 <span className="text-xs font-semibold text-white">Critical Retention Alerts</span>
-                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono">
+                <span className="text-[10px] bg-amber-500/15 text-amber-300 px-1.5 py-0.5 rounded font-mono">
                   {expiringMembers.length} Expiring
                 </span>
               </div>
@@ -165,7 +165,7 @@ export const Header: React.FC = () => {
                 {expiringMembers.slice(0, 4).map((m) => (
                   <div
                     key={m.id}
-                    className="p-2 rounded-lg bg-surface-200/90 border border-border-subtle flex items-start justify-between gap-2"
+                    className="p-2.5 rounded-lg bg-surface-200/70 hover:bg-surface-200 flex items-start justify-between gap-2 transition-colors"
                   >
                     <div className="min-w-0">
                       <div className="text-xs font-semibold text-white truncate">{m.name}</div>
@@ -192,7 +192,7 @@ export const Header: React.FC = () => {
                   setIsNotificationsOpen(false);
                   setActiveView('overview');
                 }}
-                className="w-full mt-2 pt-2 border-t border-border-subtle text-[11px] text-center text-brand-400 hover:text-brand-300 block font-medium"
+                className="w-full mt-2 pt-2 border-t border-white/[0.04] text-[11px] text-center text-brand-400 hover:text-brand-300 block font-medium"
               >
                 View all Revenue at Risk →
               </button>

@@ -142,7 +142,7 @@ export const AddMemberModal: React.FC = () => {
         </div>
 
         {/* Section 2: Membership Plan */}
-        <div className="pt-2 border-t border-border-subtle">
+        <div className="pt-2 border-t border-white/[0.04]">
           <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-400"></span> Plan & Duration
           </h4>
@@ -158,17 +158,17 @@ export const AddMemberModal: React.FC = () => {
                     <div
                       key={p.id}
                       onClick={() => setFormData({ ...formData, planId: p.id })}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${
+                      className={`p-3.5 rounded-xl cursor-pointer transition-all flex items-center justify-between ${
                         isSelected
-                          ? 'bg-brand-500/10 border-brand-500/50 text-white'
-                          : 'bg-surface-200 border-border-subtle hover:border-zinc-700 text-zinc-300'
+                          ? 'bg-brand-500/15 text-white ring-1 ring-brand-500/50'
+                          : 'bg-surface-200 hover:bg-surface-100 text-zinc-300'
                       }`}
                     >
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold">{p.name}</span>
                           {p.tag && (
-                            <span className="text-[10px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-mono">
+                            <span className="text-[10px] bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded font-mono">
                               {p.tag}
                             </span>
                           )}
@@ -215,7 +215,7 @@ export const AddMemberModal: React.FC = () => {
         </div>
 
         {/* Section 3: Payment & Locker */}
-        <div className="pt-2 border-t border-border-subtle">
+        <div className="pt-2 border-t border-white/[0.04]">
           <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-400"></span> Initial Payment & Amenities
           </h4>
@@ -241,7 +241,7 @@ export const AddMemberModal: React.FC = () => {
         </div>
 
         {/* Section 4: Emergency Contact & Notes */}
-        <div className="pt-2 border-t border-border-subtle">
+        <div className="pt-2 border-t border-white/[0.04]">
           <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-400"></span> Emergency Contact
           </h4>
@@ -267,7 +267,7 @@ export const AddMemberModal: React.FC = () => {
                 placeholder="Prior injuries, medical conditions, workout preferences..."
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full bg-surface-200 text-zinc-100 text-sm rounded-lg border border-border placeholder:text-zinc-500 p-2.5 focus:outline-none focus:border-brand-500/60 focus:ring-1 focus:ring-brand-500/40"
+                className="w-full bg-surface-200 text-zinc-100 text-sm rounded-xl placeholder:text-zinc-500 p-3 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
               />
             </div>
           </div>

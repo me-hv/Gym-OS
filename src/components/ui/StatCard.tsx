@@ -34,39 +34,34 @@ export const StatCard: React.FC<StatCardProps> = ({
     switch (variant) {
       case 'warning':
         return {
-          card: 'bg-surface-300 border-amber-500/25 hover:border-amber-500/40 relative overflow-hidden',
+          card: 'bg-surface-300 hover:bg-surface-200',
           accent: 'text-amber-400',
-          indicator: 'bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent',
-          topBar: 'bg-amber-500',
+          metricColor: 'text-amber-300',
         };
       case 'danger':
         return {
-          card: 'bg-surface-300 border-rose-500/25 hover:border-rose-500/40 relative overflow-hidden',
+          card: 'bg-surface-300 hover:bg-surface-200',
           accent: 'text-rose-400',
-          indicator: 'bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent',
-          topBar: 'bg-rose-500',
+          metricColor: 'text-rose-300',
         };
       case 'brand':
         return {
-          card: 'bg-surface-300 border-brand-500/25 hover:border-brand-500/40 relative overflow-hidden',
+          card: 'bg-surface-300 hover:bg-surface-200',
           accent: 'text-brand-400',
-          indicator: 'bg-gradient-to-r from-brand-500/10 via-brand-500/5 to-transparent',
-          topBar: 'bg-brand-500',
+          metricColor: 'text-white',
         };
       case 'cyan':
         return {
-          card: 'bg-surface-300 border-cyan-500/25 hover:border-cyan-500/40 relative overflow-hidden',
+          card: 'bg-surface-300 hover:bg-surface-200',
           accent: 'text-cyan-400',
-          indicator: 'bg-gradient-to-r from-cyan-500/10 via-cyan-500/5 to-transparent',
-          topBar: 'bg-cyan-500',
+          metricColor: 'text-white',
         };
       case 'default':
       default:
         return {
-          card: 'bg-surface-300 border-border-subtle hover:border-border',
+          card: 'bg-surface-300 hover:bg-surface-200',
           accent: 'text-zinc-400',
-          indicator: '',
-          topBar: '',
+          metricColor: 'text-white',
         };
     }
   };
@@ -77,32 +72,28 @@ export const StatCard: React.FC<StatCardProps> = ({
     <div
       className={twMerge(
         clsx(
-          'rounded-xl p-4.5 border transition-all duration-150 flex flex-col justify-between shadow-subtle',
+          'rounded-xl p-5 transition-all duration-150 flex flex-col justify-between',
           currentVariant.card,
           className
         )
       )}
     >
-      {currentVariant.topBar && (
-        <div className={clsx('absolute top-0 left-0 right-0 h-0.5', currentVariant.topBar)} />
-      )}
-
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <span className="text-xs font-medium text-zinc-400 tracking-wide uppercase">
+      {/* Label and subtle icon */}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-[11px] font-semibold text-zinc-400 tracking-wider uppercase">
           {label}
         </span>
         {icon && (
-          <div className={clsx('p-1.5 rounded-md bg-surface-100/80 border border-border-subtle text-zinc-300', currentVariant.accent)}>
+          <div className={clsx('text-zinc-400', currentVariant.accent)}>
             {icon}
           </div>
         )}
       </div>
 
-      {/* Main Metric */}
+      {/* Main Anchor Metric */}
       <div>
         <div className="flex items-baseline gap-2.5">
-          <span className="text-2xl font-bold tracking-tight text-white tabular-nums">
+          <span className={clsx('text-3xl font-bold tracking-tight tabular-nums', currentVariant.metricColor)}>
             {value}
           </span>
           {subValue && (
@@ -110,7 +101,7 @@ export const StatCard: React.FC<StatCardProps> = ({
           )}
         </div>
 
-        {/* Trend or description */}
+        {/* Delta or trend info */}
         {trend && (
           <div className="flex items-center gap-1.5 mt-2">
             <span
@@ -140,7 +131,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         <button
           onClick={onActionClick}
           className={clsx(
-            'mt-3.5 pt-2.5 border-t border-border-subtle flex items-center justify-between text-xs font-medium transition-colors text-left group',
+            'mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between text-xs font-medium transition-colors text-left group',
             variant === 'warning'
               ? 'text-amber-300 hover:text-amber-200'
               : variant === 'brand'

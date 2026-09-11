@@ -97,7 +97,7 @@ export const MemberProfileView: React.FC = () => {
           >
             Back to Directory
           </Button>
-          <div className="h-4 w-px bg-border-subtle" />
+          <div className="h-4 w-px bg-white/[0.08]" />
           <span className="text-xs font-mono text-zinc-400">{member.memberCode}</span>
         </div>
 
@@ -138,7 +138,7 @@ export const MemberProfileView: React.FC = () => {
           {/* Freeze */}
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             leftIcon={<PauseCircle className="w-3.5 h-3.5" />}
             onClick={() => setIsFreezeModalOpen(true)}
           >
@@ -148,9 +148,9 @@ export const MemberProfileView: React.FC = () => {
       </div>
 
       {/* Hero Dossier Card */}
-      <div className="rounded-xl p-6 bg-surface-300 border border-border shadow-subtle flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="rounded-2xl p-6 bg-surface-300 shadow-surface flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
-          <div className="w-20 h-20 rounded-2xl bg-surface-100 border border-border-strong overflow-hidden shrink-0 flex items-center justify-center font-bold text-2xl text-zinc-300 shadow-md">
+          <div className="w-20 h-20 rounded-2xl bg-surface-100 overflow-hidden shrink-0 flex items-center justify-center font-bold text-2xl text-zinc-300 shadow-md">
             {member.avatarUrl ? (
               <img src={member.avatarUrl} alt={member.name} className="w-full h-full object-cover" />
             ) : (
@@ -165,7 +165,7 @@ export const MemberProfileView: React.FC = () => {
                 {member.status.toUpperCase()}
               </Badge>
               {member.lockerNumber && (
-                <span className="text-xs font-mono text-zinc-400 bg-surface-200 border border-border-subtle px-2 py-0.5 rounded">
+                <span className="text-xs font-mono text-zinc-400 bg-surface-200 px-2 py-0.5 rounded-md">
                   Locker {member.lockerNumber}
                 </span>
               )}
@@ -190,7 +190,7 @@ export const MemberProfileView: React.FC = () => {
         </div>
 
         {/* Quick KPI stats on right */}
-        <div className="flex items-center gap-6 border-t md:border-t-0 md:border-l border-border-subtle pt-4 md:pt-0 md:pl-6 shrink-0">
+        <div className="flex items-center gap-6 border-t md:border-t-0 md:border-l border-white/[0.04] pt-4 md:pt-0 md:pl-6 shrink-0">
           <div>
             <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">
               Attendance Rate
@@ -232,30 +232,30 @@ export const MemberProfileView: React.FC = () => {
         {/* Left Column: Membership Specs & Emergency Info (1 col) */}
         <div className="space-y-6">
           {/* Membership Plan Specs */}
-          <div className="rounded-xl p-5 bg-surface-300 border border-border">
+          <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
             <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center justify-between">
               <span>Membership Parameters</span>
               <span className="text-brand-400 font-mono text-[11px]">Active Plan</span>
             </h3>
 
             <div className="space-y-3 text-xs">
-              <div className="flex justify-between py-1.5 border-b border-border-subtle">
+              <div className="flex justify-between py-2 border-b border-white/[0.04]">
                 <span className="text-zinc-400">Enrolled Plan</span>
                 <span className="font-semibold text-white">{member.planName}</span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-border-subtle">
+              <div className="flex justify-between py-2 border-b border-white/[0.04]">
                 <span className="text-zinc-400">Assigned Coach</span>
                 <span className="font-medium text-brand-300">{member.assignedTrainer}</span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-border-subtle">
+              <div className="flex justify-between py-2 border-b border-white/[0.04]">
                 <span className="text-zinc-400">Primary Goal</span>
                 <span className="font-medium text-zinc-200">{member.goal}</span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-border-subtle">
+              <div className="flex justify-between py-2 border-b border-white/[0.04]">
                 <span className="text-zinc-400">Expiry Date</span>
                 <span className="font-mono text-zinc-200">{member.expiryDate}</span>
               </div>
-              <div className="flex justify-between py-1.5">
+              <div className="flex justify-between py-2">
                 <span className="text-zinc-400">Payment Standing</span>
                 <Badge variant={member.paymentStatus} size="xs">
                   {member.paymentStatus}
@@ -265,12 +265,12 @@ export const MemberProfileView: React.FC = () => {
           </div>
 
           {/* Emergency Contact & Medical Notes */}
-          <div className="rounded-xl p-5 bg-surface-300 border border-border">
+          <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
             <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">
               Emergency & Health Notes
             </h3>
 
-            <div className="p-3 rounded-lg bg-surface-200 border border-border-subtle mb-3 text-xs space-y-1">
+            <div className="p-3.5 rounded-xl bg-surface-200 mb-3 text-xs space-y-1">
               <div className="text-zinc-400 text-[10px] uppercase font-semibold">
                 Primary Emergency Contact
               </div>
@@ -281,10 +281,10 @@ export const MemberProfileView: React.FC = () => {
             </div>
 
             <div>
-              <div className="text-zinc-400 text-[10px] uppercase font-semibold mb-1">
+              <div className="text-zinc-400 text-[10px] uppercase font-semibold mb-1.5">
                 Trainer / Health Observations
               </div>
-              <p className="text-xs text-zinc-300 bg-surface-200/50 p-3 rounded-lg border border-border-subtle leading-relaxed">
+              <p className="text-xs text-zinc-300 bg-surface-200/50 p-3.5 rounded-xl leading-relaxed">
                 {member.notes || 'No health notes recorded. Standard fitness induction completed.'}
               </p>
             </div>
@@ -294,11 +294,11 @@ export const MemberProfileView: React.FC = () => {
         {/* Right 2 Columns: Attendance Matrix, Invoices & Timeline */}
         <div className="lg:col-span-2 space-y-6">
           {/* Attendance Heatmap Matrix */}
-          <div className="rounded-xl p-5 bg-surface-300 border border-border">
+          <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-bold text-white">30-Day Attendance Consistency</h3>
-                <p className="text-xs text-zinc-400">
+                <h3 className="text-sm font-bold text-white tracking-tight">30-Day Attendance Consistency</h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Last visit recorded: <strong className="text-zinc-200">{member.lastVisit}</strong>
                 </p>
               </div>
@@ -314,10 +314,10 @@ export const MemberProfileView: React.FC = () => {
                 <div
                   key={idx}
                   title={`${day.date}: ${day.visited ? 'Attended workout' : 'Rest day'}`}
-                  className={`p-2 rounded-md border text-center transition-all ${
+                  className={`p-2 rounded-lg text-center transition-all ${
                     day.visited
-                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 font-semibold'
-                      : 'bg-surface-200 border-border-subtle text-zinc-500'
+                      ? 'bg-emerald-500/20 text-emerald-300 font-semibold'
+                      : 'bg-surface-200 text-zinc-500'
                   }`}
                 >
                   <div className="text-[9px] truncate">{day.date}</div>
@@ -328,11 +328,11 @@ export const MemberProfileView: React.FC = () => {
           </div>
 
           {/* Financial Transactions & Invoices for this Member */}
-          <div className="rounded-xl p-5 bg-surface-300 border border-border">
+          <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h3 className="text-sm font-bold text-white">Invoices & Receipts Ledger</h3>
-                <p className="text-xs text-zinc-400">All billing and renewal receipts in INR</p>
+                <h3 className="text-sm font-bold text-white tracking-tight">Invoices & Receipts Ledger</h3>
+                <p className="text-xs text-zinc-400 mt-0.5">All billing and renewal receipts in INR</p>
               </div>
               {member.paymentStatus !== 'paid' && (
                 <Button
@@ -351,10 +351,10 @@ export const MemberProfileView: React.FC = () => {
                   <div
                     key={pay.id}
                     onClick={() => openInvoiceModal(pay)}
-                    className="p-3 rounded-lg bg-surface-200 border border-border-subtle hover:border-brand-500/40 hover:bg-surface-100 transition-all flex items-center justify-between cursor-pointer group"
+                    className="p-3.5 rounded-xl bg-surface-200 hover:bg-surface-100 transition-all flex items-center justify-between cursor-pointer group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-surface-50 border border-border-subtle text-brand-400">
+                      <div className="p-2 rounded-lg bg-surface-100 text-brand-400">
                         <FileText className="w-4 h-4" />
                       </div>
                       <div>
@@ -379,7 +379,7 @@ export const MemberProfileView: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <div className="p-4 rounded-lg bg-surface-200/50 border border-border-subtle text-xs text-zinc-400 text-center">
+                <div className="p-4 rounded-xl bg-surface-200/50 text-xs text-zinc-400 text-center">
                   Prior annual invoice settled offline during registration.
                 </div>
               )}
@@ -387,13 +387,13 @@ export const MemberProfileView: React.FC = () => {
           </div>
 
           {/* Activity & Communications Timeline */}
-          <div className="rounded-xl p-5 bg-surface-300 border border-border">
-            <h3 className="text-sm font-bold text-white mb-4">Activity & Communication Timeline</h3>
+          <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
+            <h3 className="text-sm font-bold text-white mb-4 tracking-tight">Activity & Communication Timeline</h3>
 
-            <div className="relative pl-6 space-y-4 border-l border-border-subtle">
+            <div className="relative pl-6 space-y-4 border-l border-white/[0.06]">
               {member.timeline.map((item) => (
                 <div key={item.id} className="relative">
-                  <div className="absolute -left-[31px] top-0.5 w-3.5 h-3.5 rounded-full bg-surface-200 border-2 border-brand-500"></div>
+                  <div className="absolute -left-[31px] top-0.5 w-3.5 h-3.5 rounded-full bg-surface-200 ring-2 ring-brand-500"></div>
                   <div>
                     <div className="flex items-baseline gap-2">
                       <h4 className="text-xs font-semibold text-zinc-200">{item.title}</h4>
@@ -443,7 +443,7 @@ export const MemberProfileView: React.FC = () => {
             placeholder="e.g. Ankle sprain recovery, business travel"
             required
           />
-          <p className="text-xs text-zinc-400 bg-surface-200 p-2.5 rounded-lg border border-border-subtle">
+          <p className="text-xs text-zinc-400 bg-surface-200 p-3 rounded-xl">
             Freezing by {freezeDays} days will automatically extend this athlete's expiry date forward by {freezeDays} days.
           </p>
         </form>

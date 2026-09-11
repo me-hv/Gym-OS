@@ -169,7 +169,7 @@ export const RecordPaymentModal: React.FC = () => {
         />
 
         {/* Breakdown box */}
-        <div className="p-3 bg-surface-200 rounded-lg border border-border-subtle text-xs space-y-1.5">
+        <div className="p-3.5 bg-surface-200 rounded-xl text-xs space-y-2">
           <div className="flex justify-between text-zinc-400">
             <span>Base Subscription (excl. GST)</span>
             <span className="font-mono text-zinc-200">
@@ -182,7 +182,7 @@ export const RecordPaymentModal: React.FC = () => {
               ₹{Math.round((amount - amount / 1.18) * 100) / 100}
             </span>
           </div>
-          <div className="flex justify-between text-white font-semibold pt-1 border-t border-border-subtle">
+          <div className="flex justify-between text-white font-semibold pt-2 border-t border-white/[0.04]">
             <span>Total Settlement</span>
             <span className="font-mono text-brand-400">₹{amount.toLocaleString('en-IN')}</span>
           </div>

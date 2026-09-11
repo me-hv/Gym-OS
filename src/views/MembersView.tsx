@@ -83,7 +83,7 @@ export const MembersView: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-white tracking-tight">Members Directory</h2>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-400 mt-0.5">
             {members.length} athletes enrolled • Managing memberships, attendance habits & renewals
           </p>
         </div>
@@ -91,7 +91,7 @@ export const MembersView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             leftIcon={<Download className="w-3.5 h-3.5" />}
             onClick={() => alert('Exporting active members CSV ledger...')}
           >
@@ -109,7 +109,7 @@ export const MembersView: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-3 bg-surface-300 border border-border rounded-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-subtle">
+      <div className="p-4 bg-surface-300 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-surface">
         {/* Left: Search Input */}
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -121,7 +121,7 @@ export const MembersView: React.FC = () => {
               setCurrentPage(1);
             }}
             placeholder="Search by name, phone (+91), member code..."
-            className="w-full bg-surface-200 text-sm text-zinc-100 placeholder:text-zinc-500 rounded-lg border border-border-subtle pl-9 pr-3 py-1.5 focus:outline-none focus:border-brand-500/60 focus:ring-1 focus:ring-brand-500/30"
+            className="w-full bg-surface-200 text-sm text-zinc-100 placeholder:text-zinc-500 rounded-lg pl-9 pr-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
           />
         </div>
 
@@ -158,12 +158,12 @@ export const MembersView: React.FC = () => {
                   setStatusFilter(tab.id);
                   setCurrentPage(1);
                 }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                   isSelected
                     ? tab.id === 'risk'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : 'bg-surface-50 text-white border border-border font-semibold shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-surface-200 border border-transparent'
+                      ? 'bg-amber-500/20 text-amber-300'
+                      : 'bg-surface-100 text-white font-semibold shadow-xs'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-surface-200'
                 }`}
               >
                 <span>{tab.label}</span>
@@ -181,7 +181,7 @@ export const MembersView: React.FC = () => {
               setPlanFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="bg-surface-200 text-xs text-zinc-300 rounded-lg border border-border-subtle py-1.5 px-2.5 focus:outline-none focus:border-brand-500 cursor-pointer"
+            className="bg-surface-200 text-xs text-zinc-300 rounded-lg py-1.5 px-3 focus:outline-none focus:ring-1 focus:ring-brand-500/50 cursor-pointer"
           >
             <option value="all">All Plans</option>
             {plans.map((p) => (
@@ -194,7 +194,7 @@ export const MembersView: React.FC = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="bg-surface-200 text-xs text-zinc-300 rounded-lg border border-border-subtle py-1.5 px-2.5 focus:outline-none focus:border-brand-500 cursor-pointer"
+            className="bg-surface-200 text-xs text-zinc-300 rounded-lg py-1.5 px-3 focus:outline-none focus:ring-1 focus:ring-brand-500/50 cursor-pointer"
           >
             <option value="expiry">Sort: Expiry (Urgent first)</option>
             <option value="attendance">Sort: Attendance Rate</option>
@@ -205,25 +205,25 @@ export const MembersView: React.FC = () => {
       </div>
 
       {/* Members Data Table */}
-      <div className="rounded-xl border border-border bg-surface-300 overflow-hidden shadow-subtle">
+      <div className="rounded-2xl bg-surface-300 overflow-hidden shadow-surface">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             {/* Table Header */}
-            <thead className="bg-surface-200/90 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider border-b border-border">
+            <thead className="bg-surface-200/60 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider">
               <tr>
-                <th className="py-3 px-4">Member</th>
-                <th className="py-3 px-4">Membership Plan</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Attendance Rate</th>
-                <th className="py-3 px-4">Last Visit</th>
-                <th className="py-3 px-4">Expiry Date</th>
-                <th className="py-3 px-4">Payment</th>
-                <th className="py-3 px-4 text-right">Quick Actions</th>
+                <th className="py-3.5 px-5">Member</th>
+                <th className="py-3.5 px-4">Membership Plan</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4">Attendance Rate</th>
+                <th className="py-3.5 px-4">Last Visit</th>
+                <th className="py-3.5 px-4">Expiry Date</th>
+                <th className="py-3.5 px-4">Payment</th>
+                <th className="py-3.5 px-5 text-right">Quick Actions</th>
               </tr>
             </thead>
 
             {/* Table Body */}
-            <tbody className="divide-y divide-border-subtle">
+            <tbody className="divide-y divide-white/[0.03]">
               {paginatedMembers.length > 0 ? (
                 paginatedMembers.map((member) => (
                   <tr
@@ -232,9 +232,9 @@ export const MembersView: React.FC = () => {
                     onClick={() => viewMemberProfile(member.id)}
                   >
                     {/* 1. Member Column */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-surface-100 border border-border-subtle overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
+                        <div className="w-9 h-9 rounded-full bg-surface-100 overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
                           {member.avatarUrl ? (
                             <img
                               src={member.avatarUrl}
@@ -264,20 +264,20 @@ export const MembersView: React.FC = () => {
                     </td>
 
                     {/* 2. Membership Plan */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="font-medium text-zinc-200">{member.planName}</div>
                       <div className="text-[11px] text-zinc-400">{member.assignedTrainer}</div>
                     </td>
 
                     {/* 3. Status */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <Badge variant={member.status} size="sm">
                         {member.status}
                       </Badge>
                     </td>
 
                     {/* 4. Attendance Rate + Sparkline */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2">
                         <div>
                           <div className="font-semibold text-zinc-200 tabular-nums">
@@ -308,12 +308,12 @@ export const MembersView: React.FC = () => {
                     </td>
 
                     {/* 5. Last Visit */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <span className="text-zinc-300 font-medium">{member.lastVisit}</span>
                     </td>
 
                     {/* 6. Expiry Date */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <div>
                         <div className="font-mono text-zinc-200">{member.expiryDate}</div>
                         <span
@@ -335,7 +335,7 @@ export const MembersView: React.FC = () => {
                     </td>
 
                     {/* 7. Payment Status */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <Badge variant={member.paymentStatus} size="xs">
                         {member.paymentStatus}
                       </Badge>
@@ -347,7 +347,7 @@ export const MembersView: React.FC = () => {
                     </td>
 
                     {/* 8. Row Actions */}
-                    <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-3.5 px-5 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         {/* Quick Check-in */}
                         <button
@@ -407,7 +407,7 @@ export const MembersView: React.FC = () => {
         </div>
 
         {/* Table Pagination Footer */}
-        <div className="p-3.5 border-t border-border-subtle bg-surface-200/50 flex items-center justify-between text-xs text-zinc-400">
+        <div className="p-4 border-t border-white/[0.04] bg-surface-200/40 flex items-center justify-between text-xs text-zinc-400">
           <div>
             Showing{' '}
             <strong className="text-zinc-200">
@@ -423,7 +423,7 @@ export const MembersView: React.FC = () => {
           <div className="flex items-center gap-2">
             <Button
               size="xs"
-              variant="outline"
+              variant="secondary"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             >
@@ -434,7 +434,7 @@ export const MembersView: React.FC = () => {
             </span>
             <Button
               size="xs"
-              variant="outline"
+              variant="secondary"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             >

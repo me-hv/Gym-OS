@@ -51,7 +51,7 @@ export const Drawer: React.FC<DrawerProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 animate-fade-in"
         onClick={onClose}
       />
 
@@ -59,15 +59,15 @@ export const Drawer: React.FC<DrawerProps> = ({
       <div
         className={twMerge(
           clsx(
-            'relative w-full bg-surface-300 border-l border-border shadow-2xl h-full flex flex-col z-10 duration-200 transition-transform',
+            'relative w-full bg-surface-300 shadow-2xl h-full flex flex-col z-10 duration-200 transition-transform',
             widthStyles[width]
           )
         )}
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-6 py-4.5 border-b border-border-subtle bg-surface-200/60">
+        <div className="flex items-start justify-between px-6 py-5 bg-surface-200/60">
           <div>
-            {title && <h3 className="text-base font-semibold text-zinc-100">{title}</h3>}
+            {title && <h3 className="text-base font-semibold text-white">{title}</h3>}
             {subtitle && <p className="text-xs text-zinc-400 mt-0.5">{subtitle}</p>}
           </div>
           <button
@@ -83,7 +83,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-border-subtle bg-surface-200/60 flex items-center justify-end gap-3">
+          <div className="px-6 py-4 bg-surface-200/60 flex items-center justify-end gap-3">
             {footer}
           </div>
         )}

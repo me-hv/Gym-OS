@@ -16,45 +16,42 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Custom scrollbars */
+  /* Custom subtle scrollbars */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.16);
   }
 }
 
-/* Glass & Card effects */
-.panel-card {
+/* Refined Borderless Surface System */
+.surface-primary {
   background-color: #0F1218;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
 }
 
-.panel-card-hover {
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+.surface-secondary {
+  background-color: #151922;
 }
 
-.panel-card-hover:hover {
-  background-color: #131720;
-  border-color: rgba(255, 255, 255, 0.12);
+.surface-elevated {
+  background-color: #1D222D;
 }
 
-.border-subtle {
-  border-color: rgba(255, 255, 255, 0.07);
+.surface-hover {
+  transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.border-muted {
-  border-color: rgba(255, 255, 255, 0.12);
+.surface-hover:hover {
+  background-color: #161A24;
 }
 
 /* Number display helpers */
@@ -69,7 +66,7 @@
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #171B24 25%, #222834 50%, #171B24 75%);
+  background: linear-gradient(90deg, #151922 25%, #1D222D 50%, #151922 75%);
   background-size: 200% 100%;
   animation: shimmer 1.8s infinite;
 }

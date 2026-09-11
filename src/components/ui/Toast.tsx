@@ -25,17 +25,17 @@ export const ToastContainer: React.FC = () => {
           }
         };
 
-        const getBorderColor = () => {
+        const getBgColor = () => {
           switch (toast.type) {
             case 'success':
-              return 'border-emerald-500/30';
+              return 'bg-surface-300/95';
             case 'warning':
-              return 'border-amber-500/30';
+              return 'bg-surface-300/95';
             case 'error':
-              return 'border-rose-500/30';
+              return 'bg-surface-300/95';
             case 'info':
             default:
-              return 'border-sky-500/30';
+              return 'bg-surface-300/95';
           }
         };
 
@@ -43,8 +43,8 @@ export const ToastContainer: React.FC = () => {
           <div
             key={toast.id}
             className={clsx(
-              'pointer-events-auto bg-surface-300/95 backdrop-blur-md border rounded-xl p-3.5 shadow-2xl flex items-start gap-3 transition-all duration-200 animate-slide-down',
-              getBorderColor()
+              'pointer-events-auto backdrop-blur-md rounded-xl p-4 shadow-modal flex items-start gap-3 transition-all duration-200 animate-slide-down',
+              getBgColor()
             )}
           >
             <div className="mt-0.5">{getIcon()}</div>

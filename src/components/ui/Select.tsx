@@ -30,10 +30,10 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             className={twMerge(
               clsx(
-                'w-full appearance-none bg-surface-200 text-zinc-100 text-sm rounded-lg border border-border py-2 pl-3 pr-9 transition-colors cursor-pointer',
-                'focus:outline-none focus:border-brand-500/60 focus:ring-1 focus:ring-brand-500/40',
+                'w-full appearance-none bg-surface-200 text-zinc-100 text-sm rounded-lg py-2 pl-3 pr-9 transition-colors cursor-pointer',
+                'focus:outline-none focus:ring-1 focus:ring-brand-500/50 focus:bg-surface-100',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
-                error && 'border-rose-500/60 focus:border-rose-500 focus:ring-rose-500/30',
+                error && 'ring-1 ring-rose-500/50 focus:ring-rose-500',
                 className
               )
             )}

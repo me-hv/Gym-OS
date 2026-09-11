@@ -65,7 +65,7 @@ export const PaymentsView: React.FC = () => {
           <h2 className="text-lg font-bold text-white tracking-tight">
             Financial Ledger & Invoicing
           </h2>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-400 mt-0.5">
             GST compliant member invoices, UPI collections, and cash receipts in INR (₹)
           </p>
         </div>
@@ -73,7 +73,7 @@ export const PaymentsView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             leftIcon={<Download className="w-3.5 h-3.5" />}
             onClick={() => alert('Exporting GST Compliant Financial Ledger (CSV)...')}
           >
@@ -127,12 +127,12 @@ export const PaymentsView: React.FC = () => {
       </div>
 
       {/* Payment Gateway & Methods Breakdown Box */}
-      <div className="rounded-xl p-4 bg-surface-300 border border-border flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="rounded-2xl p-5 bg-surface-300 shadow-surface flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h4 className="text-xs font-bold text-white uppercase tracking-wider">
             Payment Mode Distribution
           </h4>
-          <p className="text-[11px] text-zinc-400">Preferred settlement channels across members</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">Preferred settlement channels across members</p>
         </div>
 
         <div className="flex items-center gap-6 text-xs">
@@ -163,7 +163,7 @@ export const PaymentsView: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-3 bg-surface-300 border border-border rounded-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-subtle">
+      <div className="p-4 bg-surface-300 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-surface">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -172,7 +172,7 @@ export const PaymentsView: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by invoice #, member name, or phone..."
-            className="w-full bg-surface-200 text-xs text-zinc-100 placeholder:text-zinc-500 rounded-lg border border-border-subtle pl-9 pr-3 py-1.5 focus:outline-none focus:border-brand-500"
+            className="w-full bg-surface-200 text-xs text-zinc-100 placeholder:text-zinc-500 rounded-lg pl-9 pr-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
           />
         </div>
 
@@ -189,9 +189,9 @@ export const PaymentsView: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setStatusFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                   isSelected
-                    ? 'bg-surface-50 text-white border border-border shadow-xs'
+                    ? 'bg-surface-100 text-white shadow-xs'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-surface-200'
                 }`}
               >
@@ -203,22 +203,22 @@ export const PaymentsView: React.FC = () => {
       </div>
 
       {/* Invoices Data Table */}
-      <div className="rounded-xl border border-border bg-surface-300 overflow-hidden shadow-subtle">
+      <div className="rounded-2xl bg-surface-300 overflow-hidden shadow-surface">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-surface-200/90 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider border-b border-border">
+            <thead className="bg-surface-200/60 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider">
               <tr>
-                <th className="py-3 px-4">Invoice #</th>
-                <th className="py-3 px-4">Member</th>
-                <th className="py-3 px-4">Membership Plan</th>
-                <th className="py-3 px-4">Date</th>
-                <th className="py-3 px-4">Payment Method</th>
-                <th className="py-3 px-4 text-right">Total (INR)</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-right">Receipt</th>
+                <th className="py-3.5 px-5">Invoice #</th>
+                <th className="py-3.5 px-4">Member</th>
+                <th className="py-3.5 px-4">Membership Plan</th>
+                <th className="py-3.5 px-4">Date</th>
+                <th className="py-3.5 px-4">Payment Method</th>
+                <th className="py-3.5 px-4 text-right">Total (INR)</th>
+                <th className="py-3.5 px-4 text-center">Status</th>
+                <th className="py-3.5 px-5 text-right">Receipt</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-subtle">
+            <tbody className="divide-y divide-white/[0.03]">
               {filteredPayments.length > 0 ? (
                 filteredPayments.map((pay) => (
                   <tr
@@ -227,12 +227,12 @@ export const PaymentsView: React.FC = () => {
                     onClick={() => openInvoiceModal(pay)}
                   >
                     {/* Invoice # */}
-                    <td className="py-3 px-4 font-mono font-semibold text-brand-400">
+                    <td className="py-3.5 px-5 font-mono font-semibold text-brand-400">
                       {pay.invoiceNumber}
                     </td>
 
                     {/* Member */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="font-semibold text-white group-hover:text-brand-300 transition-colors">
                         {pay.memberName}
                       </div>
@@ -240,13 +240,13 @@ export const PaymentsView: React.FC = () => {
                     </td>
 
                     {/* Plan */}
-                    <td className="py-3 px-4 text-zinc-300 font-medium">{pay.planName}</td>
+                    <td className="py-3.5 px-4 text-zinc-300 font-medium">{pay.planName}</td>
 
                     {/* Date */}
-                    <td className="py-3 px-4 font-mono text-zinc-400">{pay.date}</td>
+                    <td className="py-3.5 px-4 font-mono text-zinc-400">{pay.date}</td>
 
                     {/* Method & Ref */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="text-zinc-200">{pay.paymentMethod || 'Direct / Bank'}</div>
                       {pay.referenceId && (
                         <div className="text-[10px] text-zinc-400 font-mono">
@@ -256,22 +256,22 @@ export const PaymentsView: React.FC = () => {
                     </td>
 
                     {/* Total Amount in INR */}
-                    <td className="py-3 px-4 text-right font-mono font-bold text-white tabular-nums">
+                    <td className="py-3.5 px-4 text-right font-mono font-bold text-white tabular-nums">
                       ₹{pay.totalINR.toLocaleString('en-IN')}
                     </td>
 
                     {/* Status */}
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center">
                       <Badge variant={pay.status} size="xs">
                         {pay.status}
                       </Badge>
                     </td>
 
                     {/* Receipt CTA */}
-                    <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-3.5 px-5 text-right" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => openInvoiceModal(pay)}
-                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium text-zinc-300 hover:text-white hover:bg-surface-100 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-zinc-300 hover:text-white hover:bg-surface-100 transition-colors"
                       >
                         <FileText className="w-3.5 h-3.5 text-brand-400" />
                         <span>View</span>

@@ -26,7 +26,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-medium transition-all duration-150 rounded-lg select-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50';
+      'inline-flex items-center justify-center font-medium transition-all duration-150 rounded-lg select-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40';
 
     const sizeStyles = {
       xs: 'text-xs px-2.5 py-1 gap-1.5 h-7',
@@ -37,19 +37,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary:
-        'bg-brand-500 hover:bg-brand-400 text-zinc-950 font-semibold shadow-sm hover:shadow-glow-brand border border-brand-400/30 active:bg-brand-600',
+        'bg-brand-500 hover:bg-brand-400 text-zinc-950 font-semibold shadow-xs active:bg-brand-600',
       emerald:
-        'bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-sm border border-emerald-500/30',
+        'bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-xs',
       secondary:
-        'bg-surface-100 hover:bg-surface-50 text-zinc-200 hover:text-white border border-border-subtle hover:border-border active:bg-surface-200',
+        'bg-surface-100 hover:bg-surface-50 text-zinc-200 hover:text-white active:bg-surface-200',
       outline:
-        'bg-transparent hover:bg-surface-100 text-zinc-300 hover:text-white border border-border hover:border-zinc-500 active:bg-surface-200',
+        'bg-surface-200 hover:bg-surface-100 text-zinc-300 hover:text-white active:bg-surface-50',
       ghost:
-        'bg-transparent hover:bg-surface-100 text-zinc-400 hover:text-zinc-100 border border-transparent',
+        'bg-transparent hover:bg-surface-100/80 text-zinc-400 hover:text-zinc-100',
       danger:
-        'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 hover:text-rose-200 border border-rose-500/30',
+        'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 hover:text-rose-200',
       warning:
-        'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 hover:text-amber-200 border border-amber-500/30',
+        'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 hover:text-amber-200',
     };
 
     return (

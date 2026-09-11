@@ -62,7 +62,7 @@ export const AttendanceView: React.FC = () => {
           <h2 className="text-lg font-bold text-white tracking-tight">
             Attendance & Floor Management
           </h2>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-400 mt-0.5">
             Real-time biometric/RFID access logs & member retention monitoring
           </p>
         </div>
@@ -70,7 +70,7 @@ export const AttendanceView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             leftIcon={<Download className="w-3.5 h-3.5" />}
             onClick={() => alert('Exporting attendance CSV logs...')}
           >
@@ -125,14 +125,14 @@ export const AttendanceView: React.FC = () => {
       </div>
 
       {/* Tab Switcher & Filter Bar */}
-      <div className="p-3 bg-surface-300 border border-border rounded-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-subtle">
+      <div className="p-4 bg-surface-300 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-surface">
         {/* Tabs */}
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setActiveTab('today')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 ${
               activeTab === 'today'
-                ? 'bg-surface-50 text-white border border-border shadow-xs'
+                ? 'bg-surface-100 text-white shadow-xs'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-surface-200'
             }`}
           >
@@ -143,9 +143,9 @@ export const AttendanceView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('absentees')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 ${
               activeTab === 'absentees'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                ? 'bg-amber-500/20 text-amber-300'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-surface-200'
             }`}
           >
@@ -164,14 +164,14 @@ export const AttendanceView: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search check-ins..."
-              className="w-full bg-surface-200 text-xs text-zinc-100 placeholder:text-zinc-500 rounded-lg border border-border-subtle pl-8 pr-3 py-1.5 focus:outline-none focus:border-brand-500"
+              className="w-full bg-surface-200 text-xs text-zinc-100 placeholder:text-zinc-500 rounded-lg pl-8 pr-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
             />
           </div>
 
           <select
             value={selectedTrainer}
             onChange={(e) => setSelectedTrainer(e.target.value)}
-            className="bg-surface-200 text-xs text-zinc-300 rounded-lg border border-border-subtle py-1.5 px-2.5 focus:outline-none focus:border-brand-500 cursor-pointer"
+            className="bg-surface-200 text-xs text-zinc-300 rounded-lg py-1.5 px-3 focus:outline-none focus:ring-1 focus:ring-brand-500/50 cursor-pointer"
           >
             <option value="all">All Coaches</option>
             <option value="Vikram">Coach Vikram</option>
@@ -183,21 +183,21 @@ export const AttendanceView: React.FC = () => {
 
       {/* Content for Tab 1: Today's Check-ins */}
       {activeTab === 'today' && (
-        <div className="rounded-xl border border-border bg-surface-300 overflow-hidden shadow-subtle">
+        <div className="rounded-2xl bg-surface-300 overflow-hidden shadow-surface">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-surface-200/90 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider border-b border-border">
+              <thead className="bg-surface-200/60 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider">
                 <tr>
-                  <th className="py-3 px-4">Time Log</th>
-                  <th className="py-3 px-4">Member Name</th>
-                  <th className="py-3 px-4">Membership Plan</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Workout Goal</th>
-                  <th className="py-3 px-4">Assigned Coach</th>
-                  <th className="py-3 px-4 text-right">Profile</th>
+                  <th className="py-3.5 px-5">Time Log</th>
+                  <th className="py-3.5 px-4">Member Name</th>
+                  <th className="py-3.5 px-4">Membership Plan</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4">Workout Goal</th>
+                  <th className="py-3.5 px-4">Assigned Coach</th>
+                  <th className="py-3.5 px-5 text-right">Profile</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border-subtle">
+              <tbody className="divide-y divide-white/[0.03]">
                 {filteredCheckIns.length > 0 ? (
                   filteredCheckIns.map((item) => (
                     <tr
@@ -206,14 +206,14 @@ export const AttendanceView: React.FC = () => {
                       onClick={() => viewMemberProfile(item.memberId)}
                     >
                       {/* Check-in Time */}
-                      <td className="py-3 px-4 font-mono font-bold text-brand-400">
+                      <td className="py-3.5 px-5 font-mono font-bold text-brand-400">
                         {item.checkInTime}
                       </td>
 
                       {/* Member */}
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-surface-100 border border-border-subtle overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
+                          <div className="w-7 h-7 rounded-full bg-surface-100 overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
                             {item.memberAvatar ? (
                               <img src={item.memberAvatar} alt={item.memberName} className="w-full h-full object-cover" />
                             ) : (
@@ -230,35 +230,35 @@ export const AttendanceView: React.FC = () => {
                       </td>
 
                       {/* Plan */}
-                      <td className="py-3 px-4 text-zinc-300 font-medium">
+                      <td className="py-3.5 px-4 text-zinc-300 font-medium">
                         {item.planName}
                       </td>
 
                       {/* Status */}
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-4">
                         <Badge variant={item.status} size="xs">
                           {item.status}
                         </Badge>
                       </td>
 
                       {/* Goal */}
-                      <td className="py-3 px-4 text-zinc-400">
+                      <td className="py-3.5 px-4 text-zinc-400">
                         {item.workoutGoal}
                       </td>
 
                       {/* Trainer */}
-                      <td className="py-3 px-4 text-zinc-300 font-medium">
+                      <td className="py-3.5 px-4 text-zinc-300 font-medium">
                         {item.trainerName}
                       </td>
 
                       {/* Action */}
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-3.5 px-5 text-right">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             viewMemberProfile(item.memberId);
                           }}
-                          className="text-xs text-brand-400 hover:text-brand-300 font-medium"
+                          className="text-xs text-brand-400 hover:text-brand-300 font-medium transition-colors"
                         >
                           View →
                         </button>
@@ -281,30 +281,30 @@ export const AttendanceView: React.FC = () => {
       {/* Content for Tab 2: Absentee Watch List (Churn Prevention) */}
       {activeTab === 'absentees' && (
         <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
+          <div className="p-5 rounded-2xl bg-amber-500/10 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
               <div>
-                <h4 className="text-sm font-bold text-amber-300">
+                <h4 className="text-sm font-bold text-amber-300 tracking-tight">
                   Absentee Churn Prevention Engine
                 </h4>
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Members who haven't visited in 7+ days are 4x more likely to cancel at renewal. Send encouragement WhatsApp messages.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {absenteeMembers.map((m) => (
               <div
                 key={m.id}
-                className="p-4 rounded-xl bg-surface-300 border border-border flex flex-col justify-between"
+                className="p-5 rounded-2xl bg-surface-300 shadow-surface flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-surface-100 border border-border-subtle overflow-hidden flex items-center justify-center font-bold text-zinc-300">
+                      <div className="w-9 h-9 rounded-full bg-surface-100 overflow-hidden flex items-center justify-center font-bold text-zinc-300">
                         {m.avatarUrl ? (
                           <img src={m.avatarUrl} alt={m.name} className="w-full h-full object-cover" />
                         ) : (
@@ -321,7 +321,7 @@ export const AttendanceView: React.FC = () => {
                     </Badge>
                   </div>
 
-                  <div className="mt-3.5 space-y-1 text-xs">
+                  <div className="mt-4 space-y-1.5 text-xs">
                     <div className="flex justify-between text-zinc-400">
                       <span>Last Visit:</span>
                       <span className="font-semibold text-rose-400">{m.lastVisit}</span>
@@ -337,7 +337,7 @@ export const AttendanceView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-border-subtle flex items-center justify-between">
+                <div className="mt-5 pt-3.5 border-t border-white/[0.04] flex items-center justify-between">
                   <Button
                     size="xs"
                     variant="ghost"

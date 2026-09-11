@@ -104,23 +104,23 @@ export const OverviewView: React.FC = () => {
       </div>
 
       {/* Hero Feature Section: Revenue At Risk Retention Hub */}
-      <div className="rounded-xl p-5 bg-gradient-to-r from-amber-500/10 via-surface-300 to-surface-300 border border-amber-500/30 shadow-subtle relative overflow-hidden">
+      <div className="rounded-2xl p-6 bg-gradient-to-br from-amber-500/[0.08] via-surface-300 to-surface-300 shadow-surface relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-full bg-radial from-amber-500/5 to-transparent pointer-events-none" />
 
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-border-subtle">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-white/[0.04]">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40">
+            <div className="flex items-center gap-2.5">
+              <span className="p-1.5 rounded-lg bg-amber-500/15 text-amber-300">
                 <AlertTriangle className="w-4 h-4" />
               </span>
               <h3 className="text-base font-bold text-white tracking-tight">
                 Revenue Retention Command: ₹{gymStats.revenueAtRiskINR.toLocaleString('en-IN')} Expiring
               </h3>
-              <span className="text-xs bg-amber-500/20 text-amber-300 font-mono px-2 py-0.5 rounded-full font-semibold">
+              <span className="text-xs bg-amber-500/15 text-amber-300 font-mono px-2.5 py-0.5 rounded-full font-semibold">
                 {gymStats.expiringIn7DaysCount} Members at Risk
               </span>
             </div>
-            <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
+            <p className="text-xs text-zinc-400 mt-1.5 max-w-2xl leading-relaxed">
               These members expire within the next 7 days. Trigger pre-composed, personalized WhatsApp renewal offers with 1-click UPI checkout links to protect your monthly recurring cashflow.
             </p>
           </div>
@@ -144,11 +144,11 @@ export const OverviewView: React.FC = () => {
           {expiringMembers.map((member) => (
             <div
               key={member.id}
-              className="p-3.5 rounded-lg bg-surface-200/90 border border-border-subtle hover:border-amber-500/40 transition-all flex flex-col justify-between"
+              className="p-3.5 rounded-xl bg-surface-200/80 hover:bg-surface-200 transition-all flex flex-col justify-between"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-surface-100 border border-border-subtle overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
+                  <div className="w-8 h-8 rounded-full bg-surface-100 overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
                     {member.avatarUrl ? (
                       <img src={member.avatarUrl} alt={member.name} className="w-full h-full object-cover" />
                     ) : (
@@ -169,10 +169,10 @@ export const OverviewView: React.FC = () => {
                 </div>
 
                 <span
-                  className={`text-[11px] font-bold px-1.5 py-0.5 rounded font-mono shrink-0 ${
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-md font-mono shrink-0 ${
                     member.daysRemaining <= 2
-                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      ? 'bg-rose-500/20 text-rose-300'
+                      : 'bg-amber-500/20 text-amber-300'
                   }`}
                 >
                   {member.daysRemaining === 0
@@ -183,13 +183,13 @@ export const OverviewView: React.FC = () => {
                 </span>
               </div>
 
-              <div className="mt-3 pt-2.5 border-t border-border-subtle flex items-center justify-between text-xs">
-                <div className="text-zinc-400">
-                  Attendance: <strong className="text-zinc-200">{member.attendanceRate}%</strong>
+              <div className="mt-3 pt-2.5 border-t border-white/[0.04] flex items-center justify-between text-xs">
+                <div className="text-zinc-400 text-[11px]">
+                  Attendance: <strong className="text-zinc-200 font-mono">{member.attendanceRate}%</strong>
                 </div>
                 <button
                   onClick={() => openWhatsAppModal(member)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-1 rounded transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-md transition-colors"
                 >
                   <Send className="w-3 h-3" />
                   <span>Send WhatsApp</span>
@@ -203,11 +203,11 @@ export const OverviewView: React.FC = () => {
       {/* Analytics Charts & Health Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chart 1: Revenue Progression (2 cols) */}
-        <div className="lg:col-span-2 rounded-xl p-5 bg-surface-300 border border-border flex flex-col justify-between">
+        <div className="lg:col-span-2 rounded-2xl p-6 bg-surface-300 shadow-surface flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-white">Monthly Revenue Velocity</h3>
-              <p className="text-xs text-zinc-400">
+              <h3 className="text-sm font-bold text-white tracking-tight">Monthly Revenue Velocity</h3>
+              <p className="text-xs text-zinc-400 mt-0.5">
                 FY 2026 Collection trajectory vs Target in INR (₹)
               </p>
             </div>
@@ -237,21 +237,22 @@ export const OverviewView: React.FC = () => {
                   stroke="#52525b"
                   fontSize={11}
                   tickLine={false}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+                  axisLine={false}
                 />
                 <YAxis
                   stroke="#52525b"
                   fontSize={11}
                   tickLine={false}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+                  axisLine={false}
                   tickFormatter={(val) => `₹${val / 1000}k`}
                 />
                 <Tooltip
                   formatter={customTooltipFormatter}
                   contentStyle={{
-                    backgroundColor: '#13161D',
-                    borderColor: 'rgba(255,255,255,0.12)',
-                    borderRadius: '8px',
+                    backgroundColor: '#151922',
+                    border: 'none',
+                    borderRadius: '12px',
+                    boxShadow: '0 12px 32px -4px rgba(0, 0, 0, 0.5)',
                     fontSize: '12px',
                     color: '#fff',
                   }}
@@ -278,12 +279,12 @@ export const OverviewView: React.FC = () => {
         </div>
 
         {/* Chart 2: Membership Health Breakdown */}
-        <div className="rounded-xl p-5 bg-surface-300 border border-border flex flex-col justify-between">
+        <div className="rounded-2xl p-6 bg-surface-300 shadow-surface flex flex-col justify-between">
           <div>
-            <h3 className="text-sm font-bold text-white mb-0.5">Membership Health</h3>
-            <p className="text-xs text-zinc-400 mb-4">Current roster lifecycle distribution</p>
+            <h3 className="text-sm font-bold text-white tracking-tight mb-0.5">Membership Health</h3>
+            <p className="text-xs text-zinc-400 mb-5">Current roster lifecycle distribution</p>
 
-            <div className="space-y-3.5">
+            <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-xs mb-1.5">
                   <span className="text-zinc-300 font-medium flex items-center gap-1.5">
@@ -334,7 +335,7 @@ export const OverviewView: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-xs">
+          <div className="mt-5 pt-4 border-t border-white/[0.04] flex items-center justify-between text-xs">
             <span className="text-zinc-400">30-Day Retention Rate:</span>
             <span className="font-bold text-emerald-400 font-mono">89.2%</span>
           </div>
@@ -344,13 +345,13 @@ export const OverviewView: React.FC = () => {
       {/* Live Floor Density & Recent Activity Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Floor Traffic Peak Hours */}
-        <div className="rounded-xl p-5 bg-surface-300 border border-border">
+        <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-white">Today's Hourly Peak Load</h3>
-              <p className="text-xs text-zinc-400">Occupancy distribution (6:00 AM - 10:00 PM)</p>
+              <h3 className="text-sm font-bold text-white tracking-tight">Today's Hourly Peak Load</h3>
+              <p className="text-xs text-zinc-400 mt-0.5">Occupancy distribution (6:00 AM - 10:00 PM)</p>
             </div>
-            <span className="text-xs font-mono text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
+            <span className="text-xs font-mono text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-md">
               Peak: 86 at 7 PM
             </span>
           </div>
@@ -363,19 +364,20 @@ export const OverviewView: React.FC = () => {
                   stroke="#52525b"
                   fontSize={10}
                   tickLine={false}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+                  axisLine={false}
                 />
                 <YAxis
                   stroke="#52525b"
                   fontSize={10}
                   tickLine={false}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+                  axisLine={false}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#13161D',
-                    borderColor: 'rgba(255,255,255,0.12)',
-                    borderRadius: '8px',
+                    backgroundColor: '#151922',
+                    border: 'none',
+                    borderRadius: '12px',
+                    boxShadow: '0 12px 32px -4px rgba(0, 0, 0, 0.5)',
                     fontSize: '12px',
                     color: '#fff',
                   }}
@@ -387,15 +389,15 @@ export const OverviewView: React.FC = () => {
         </div>
 
         {/* Real-time Check-ins Feed */}
-        <div className="rounded-xl p-5 bg-surface-300 border border-border flex flex-col justify-between">
+        <div className="rounded-2xl p-6 bg-surface-300 shadow-surface flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-sm font-bold text-white">Live Check-ins Stream</h3>
-              <p className="text-xs text-zinc-400">Instant floor logs today</p>
+              <h3 className="text-sm font-bold text-white tracking-tight">Live Check-ins Stream</h3>
+              <p className="text-xs text-zinc-400 mt-0.5">Instant floor logs today</p>
             </div>
             <button
               onClick={() => setActiveView('attendance')}
-              className="text-xs text-brand-400 hover:text-brand-300 font-medium"
+              className="text-xs text-brand-400 hover:text-brand-300 font-medium transition-colors"
             >
               View Full Desk →
             </button>
@@ -405,10 +407,10 @@ export const OverviewView: React.FC = () => {
             {checkIns.slice(0, 5).map((log) => (
               <div
                 key={log.id}
-                className="p-2.5 rounded-lg bg-surface-200/70 border border-border-subtle flex items-center justify-between hover:bg-surface-200 transition-colors"
+                className="p-3 rounded-xl bg-surface-200/70 flex items-center justify-between hover:bg-surface-200 transition-colors"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-full bg-surface-100 border border-border-subtle overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-surface-100 overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
                     {log.memberAvatar ? (
                       <img src={log.memberAvatar} alt={log.memberName} className="w-full h-full object-cover" />
                     ) : (
@@ -436,9 +438,9 @@ export const OverviewView: React.FC = () => {
             ))}
           </div>
 
-          <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between text-xs">
+          <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between text-xs">
             <span className="text-zinc-400">Reception Scanner Status:</span>
-            <span className="text-emerald-400 font-medium flex items-center gap-1">
+            <span className="text-emerald-400 font-medium flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               Online & Logging
             </span>

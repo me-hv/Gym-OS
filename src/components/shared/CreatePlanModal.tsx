@@ -135,7 +135,7 @@ export const CreatePlanModal: React.FC = () => {
             placeholder="Brief value proposition for members..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-surface-200 text-zinc-100 text-sm rounded-lg border border-border placeholder:text-zinc-500 p-2.5 focus:outline-none focus:border-brand-500/60 focus:ring-1 focus:ring-brand-500/40"
+            className="w-full bg-surface-200 text-zinc-100 text-sm rounded-xl placeholder:text-zinc-500 p-3 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
           />
         </div>
 
@@ -147,13 +147,13 @@ export const CreatePlanModal: React.FC = () => {
             {features.map((feat, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-2 rounded bg-surface-200 border border-border-subtle text-xs text-zinc-200"
+                className="flex items-center justify-between p-2.5 rounded-lg bg-surface-200 text-xs text-zinc-200"
               >
                 <span>• {feat}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveFeature(idx)}
-                  className="text-zinc-500 hover:text-rose-400 p-1"
+                  className="text-zinc-500 hover:text-rose-400 p-1 transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -173,7 +173,7 @@ export const CreatePlanModal: React.FC = () => {
                   handleAddFeature();
                 }
               }}
-              className="flex-1 bg-surface-200 text-zinc-100 text-xs rounded-lg border border-border px-3 py-2 focus:outline-none focus:border-brand-500"
+              className="flex-1 bg-surface-200 text-zinc-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
             />
             <Button type="button" size="sm" variant="secondary" onClick={handleAddFeature}>
               <Plus className="w-3.5 h-3.5 mr-1" /> Add

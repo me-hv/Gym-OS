@@ -87,26 +87,26 @@ export const QuickCheckInModal: React.FC = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Enter Member Code (e.g. GYM-2024-001) or Name..."
-              className="w-full bg-surface-200 text-white text-sm rounded-lg border border-border-strong pl-9 pr-3 py-2.5 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+              className="w-full bg-surface-200 text-white text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
         </div>
 
         {/* Success Confirmation Banner if just checked in */}
         {lastCheckIn && (
-          <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between animate-slide-down">
+          <div className="p-4 rounded-xl bg-emerald-500/10 flex items-center justify-between animate-slide-down">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
               <div>
                 <h4 className="text-sm font-semibold text-emerald-300">
                   {lastCheckIn.name} Checked In!
                 </h4>
-                <p className="text-xs text-emerald-400/80">
+                <p className="text-xs text-emerald-400/80 mt-0.5">
                   {lastCheckIn.planName} • Trainer: {lastCheckIn.assignedTrainer}
                 </p>
               </div>
             </div>
-            <span className="text-xs font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded">
+            <span className="text-xs font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-md">
               Entry Granted
             </span>
           </div>
@@ -121,10 +121,10 @@ export const QuickCheckInModal: React.FC = () => {
             {filteredMembers.map((m) => (
               <div
                 key={m.id}
-                className="p-2.5 rounded-lg bg-surface-200 border border-border-subtle hover:border-brand-500/40 hover:bg-surface-100 transition-all flex items-center justify-between group"
+                className="p-3 rounded-xl bg-surface-200 hover:bg-surface-100 transition-all flex items-center justify-between group"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-surface-50 border border-border-subtle overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
+                  <div className="w-8 h-8 rounded-full bg-surface-50 overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
                     {m.avatarUrl ? (
                       <img src={m.avatarUrl} alt={m.name} className="w-full h-full object-cover" />
                     ) : (
@@ -136,7 +136,7 @@ export const QuickCheckInModal: React.FC = () => {
                       <span className="text-sm font-semibold text-white truncate">{m.name}</span>
                       <span className="text-xs text-zinc-400 font-mono">{m.memberCode}</span>
                     </div>
-                    <div className="text-xs text-zinc-400 truncate flex items-center gap-2">
+                    <div className="text-xs text-zinc-400 truncate flex items-center gap-2 mt-0.5">
                       <span>{m.planName}</span>
                       <span>•</span>
                       <span>Locker: {m.lockerNumber || 'None'}</span>
@@ -173,13 +173,13 @@ export const QuickCheckInModal: React.FC = () => {
                 <button
                   key={m.id}
                   onClick={() => handlePerformCheckIn(m)}
-                  className="p-2.5 rounded-lg bg-surface-200/80 border border-border-subtle hover:border-brand-500/30 hover:bg-surface-100 transition-all text-left flex items-center justify-between group"
+                  className="p-3 rounded-xl bg-surface-200 hover:bg-surface-100 transition-all text-left flex items-center justify-between group"
                 >
                   <div className="min-w-0 pr-2">
                     <div className="text-xs font-semibold text-zinc-200 group-hover:text-white truncate">
                       {m.name}
                     </div>
-                    <div className="text-[11px] text-zinc-400 truncate">{m.planName}</div>
+                    <div className="text-[11px] text-zinc-400 truncate mt-0.5">{m.planName}</div>
                   </div>
                   <Badge variant={m.status} size="xs">
                     {m.status}

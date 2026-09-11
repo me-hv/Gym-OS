@@ -60,9 +60,9 @@ export const WhatsAppRenewalModal: React.FC = () => {
     >
       <div className="space-y-4">
         {/* Member Preview Card */}
-        <div className="p-3.5 rounded-lg bg-surface-200 border border-border-subtle flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-surface-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-surface-100 border border-border-subtle overflow-hidden flex items-center justify-center font-semibold text-zinc-300">
+            <div className="w-10 h-10 rounded-full bg-surface-100 overflow-hidden flex items-center justify-center font-semibold text-zinc-300">
               {member.avatarUrl ? (
                 <img src={member.avatarUrl} alt={member.name} className="w-full h-full object-cover" />
               ) : (
@@ -102,10 +102,10 @@ export const WhatsAppRenewalModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setTemplateType('standard')}
-              className={`p-2.5 rounded-lg border text-left transition-colors ${
+              className={`p-3 rounded-xl text-left transition-colors ${
                 templateType === 'standard'
-                  ? 'bg-brand-500/10 border-brand-500/40 text-brand-300'
-                  : 'bg-surface-200 border-border-subtle text-zinc-400 hover:text-zinc-200 hover:bg-surface-100'
+                  ? 'bg-brand-500/15 text-brand-300 font-semibold'
+                  : 'bg-surface-200 text-zinc-400 hover:text-zinc-200 hover:bg-surface-100'
               }`}
             >
               <div className="text-xs font-semibold">Friendly Reminder</div>
@@ -114,10 +114,10 @@ export const WhatsAppRenewalModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setTemplateType('discount')}
-              className={`p-2.5 rounded-lg border text-left transition-colors ${
+              className={`p-3 rounded-xl text-left transition-colors ${
                 templateType === 'discount'
-                  ? 'bg-brand-500/10 border-brand-500/40 text-brand-300'
-                  : 'bg-surface-200 border-border-subtle text-zinc-400 hover:text-zinc-200 hover:bg-surface-100'
+                  ? 'bg-brand-500/15 text-brand-300 font-semibold'
+                  : 'bg-surface-200 text-zinc-400 hover:text-zinc-200 hover:bg-surface-100'
               }`}
             >
               <div className="text-xs font-semibold">Early Bird Incentive</div>
@@ -126,10 +126,10 @@ export const WhatsAppRenewalModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setTemplateType('urgent')}
-              className={`p-2.5 rounded-lg border text-left transition-colors ${
+              className={`p-3 rounded-xl text-left transition-colors ${
                 templateType === 'urgent'
-                  ? 'bg-rose-500/10 border-rose-500/40 text-rose-300'
-                  : 'bg-surface-200 border-border-subtle text-zinc-400 hover:text-zinc-200 hover:bg-surface-100'
+                  ? 'bg-rose-500/15 text-rose-300 font-semibold'
+                  : 'bg-surface-200 text-zinc-400 hover:text-zinc-200 hover:bg-surface-100'
               }`}
             >
               <div className="text-xs font-semibold">Locker Expiry Notice</div>
@@ -151,7 +151,7 @@ export const WhatsAppRenewalModal: React.FC = () => {
               rows={5}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full bg-[#0d1614] text-emerald-100 text-xs font-mono rounded-lg border border-emerald-900/60 p-3 leading-relaxed focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30"
+              className="w-full bg-[#0d1614] text-emerald-100 text-xs font-mono rounded-xl p-3.5 leading-relaxed focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
             />
           </div>
           <p className="text-[11px] text-zinc-400 mt-1">
