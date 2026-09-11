@@ -13,6 +13,11 @@ import {
   ActiveNavView,
   MemberRetentionProfile,
   RetentionStats,
+  MemberNote,
+  NoteCategory,
+  FastCheckInResult,
+  DailyOperationsSummary,
+  UserRole,
 } from '../types';
 import {
   INITIAL_MEMBERS,
@@ -20,6 +25,7 @@ import {
   INITIAL_CHECKINS,
   INITIAL_PAYMENTS,
   INITIAL_GYM_STATS,
+  INITIAL_MEMBER_NOTES,
 } from '../data/mockData';
 import {
   gymService,
@@ -31,6 +37,11 @@ import {
   getAppMode,
 } from '../services/gymService';
 import { calculateRetentionOverview } from '../services/retentionService';
+import {
+  fastCheckInMember,
+  calculateDailySummary,
+  searchMembersRanked,
+} from '../services/frontDeskService';
 import { createClient } from '../lib/supabase/client';
 
 export type { ActiveNavView };
@@ -54,6 +65,7 @@ interface GymContextType {
   currentUser: UserSession;
   appMode: AppMode;
   signOut: () => Promise<void>;
+  switchUserRole: (role: UserRole) => void;
 
   members: Member[];
   plans: MembershipPlan[];
@@ -65,6 +77,12 @@ interface GymContextType {
   // Retention Intelligence Layer
   retentionProfiles: MemberRetentionProfile[];
   retentionStats: RetentionStats;
+
+  // Operations & Front Desk
+  memberNotes: MemberNote[];
+  dailySummary: DailyOperationsSummary;
+  fastCheckIn: (query: string) => Promise<FastCheckInResult>;
+  addMemberNote: (memberId: string, note: string, category: NoteCategory) => Promise<void>;
 
   // Actions
   checkInMember: (memberId: string) => Promise<{ success: boolean; message: string }>;
@@ -124,6 +142,17 @@ interface GymContextType {
   invoiceModalData: { isOpen: boolean; payment: PaymentTransaction | null };
   openInvoiceModal: (payment: PaymentTransaction) => void;
   closeInvoiceModal: () => void;
+
+  isAddNoteModalOpen: boolean;
+  setAddNoteModalOpen: (open: boolean) => void;
+  addNoteModalData: { isOpen: boolean; member: Member | null };
+  openAddNoteModal: (member: Member) => void;
+  closeAddNoteModal: () => void;
+
+  isEndOfDayModalOpen: boolean;
+  setEndOfDayModalOpen: (open: boolean) => void;
+  openEndOfDayModal: () => void;
+  closeEndOfDayModal: () => void;
 }
 
 const GymContext = createContext<GymContextType | undefined>(undefined);
@@ -171,6 +200,14 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isOpen: false,
     payment: null,
   });
+
+  const [memberNotes, setMemberNotes] = useState<MemberNote[]>(INITIAL_MEMBER_NOTES);
+  const [isAddNoteModalOpen, setAddNoteModalOpen] = useState(false);
+  const [addNoteModalData, setAddNoteModalData] = useState<{ isOpen: boolean; member: Member | null }>({
+    isOpen: false,
+    member: null,
+  });
+  const [isEndOfDayModalOpen, setEndOfDayModalOpen] = useState(false);
 
   // Re-calculate dashboard metrics whenever members, checkIns, or payments change
   const refreshStats = useCallback(
@@ -743,10 +780,197 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setInvoiceModalData({ isOpen: false, payment: null });
   };
 
+  const openAddNoteModal = (member: Member) => {
+    setAddNoteModalData({ isOpen: true, member });
+    setAddNoteModalOpen(true);
+  };
+
+  const closeAddNoteModal = () => {
+    setAddNoteModalData({ isOpen: false, member: null });
+    setAddNoteModalOpen(false);
+  };
+
+  const openEndOfDayModal = () => {
+    setEndOfDayModalOpen(true);
+  };
+
+  const closeEndOfDayModal = () => {
+    setEndOfDayModalOpen(false);
+  };
+
+  const switchUserRole = (role: UserRole) => {
+    setCurrentUser((prev) => {
+      let fullName = prev.fullName;
+      if (role === 'front_desk') fullName = 'Rakesh Desk Lead';
+      else if (role === 'trainer') fullName = 'Coach Vikram';
+      else fullName = 'Alok Sharma';
+      return { ...prev, role, fullName };
+    });
+    addToast({
+      title: 'Workspace Role Changed',
+      message: `Switched active role to ${role.toUpperCase().replace('_', ' ')}.`,
+      type: 'info',
+    });
+  };
+
+  const fastCheckIn = async (query: string): Promise<FastCheckInResult> => {
+    const result = fastCheckInMember(
+      members,
+      checkIns,
+      query,
+      'Floor Workout',
+      new Date(),
+      organization.peakCapacity
+    );
+
+    if (result.status === 'confirmed' && result.member) {
+      const member = result.member;
+      try {
+        const newRecord = await gymService.checkInMember(organization.id, member, checkIns, 'Floor Workout');
+        const updatedCheckIns = [newRecord, ...checkIns];
+        setCheckIns(updatedCheckIns);
+
+        const timeStr = newRecord.checkInTime;
+        const dateStr = newRecord.date;
+
+        const updatedMembers = members.map((m) => {
+          if (m.id === member.id) {
+            return {
+              ...m,
+              lastVisit: `Today, ${timeStr}`,
+              lastVisitDate: dateStr,
+              isCurrentlyOnFloor: true,
+              totalVisits: m.totalVisits + 1,
+              monthlyVisits: m.monthlyVisits + 1,
+              attendanceHistory: [
+                {
+                  id: 'att-' + Date.now(),
+                  date: dateStr,
+                  time: timeStr,
+                  durationMinutes: 60,
+                  workoutType: 'Floor Workout',
+                  trainerName: m.assignedTrainer,
+                },
+                ...m.attendanceHistory,
+              ],
+              timeline: [
+                {
+                  id: 'tim-' + Date.now(),
+                  type: 'checkin' as const,
+                  title: 'Checked in at Reception Desk',
+                  description: `Floor entry logged at ${timeStr}`,
+                  timestamp: `Today, ${timeStr}`,
+                },
+                ...m.timeline,
+              ],
+            };
+          }
+          return m;
+        });
+
+        setMembers(updatedMembers);
+        refreshStats(updatedMembers, updatedCheckIns, payments, organization.peakCapacity);
+
+        addToast({
+          title: 'Check-In Confirmed',
+          message: `${member.name} (${member.planName}) checked in at ${timeStr}.`,
+          type: 'success',
+        });
+
+        return { ...result, checkInTime: timeStr };
+      } catch (err: any) {
+        addToast({
+          title: 'Check-In Blocked',
+          message: err?.message || 'Check-in failed.',
+          type: 'warning',
+        });
+        return { success: false, status: 'error', message: err?.message || 'Check-in failed' };
+      }
+    } else if (result.status === 'duplicate') {
+      addToast({
+        title: 'Already On Floor',
+        message: result.message,
+        type: 'warning',
+      });
+    } else if (result.status === 'expired') {
+      addToast({
+        title: 'Membership Expired',
+        message: result.message,
+        type: 'warning',
+      });
+    } else if (result.status === 'frozen') {
+      addToast({
+        title: 'Membership Frozen',
+        message: result.message,
+        type: 'warning',
+      });
+    } else if (result.status === 'not_found') {
+      addToast({
+        title: 'Athlete Not Found',
+        message: result.message,
+        type: 'error',
+      });
+    }
+
+    return result;
+  };
+
+  const addMemberNote = async (memberId: string, noteText: string, category: NoteCategory) => {
+    const member = members.find((m) => m.id === memberId);
+    if (!member) return;
+
+    const newNote: MemberNote = {
+      id: 'note-' + Date.now(),
+      memberId,
+      organizationId: organization.id,
+      note: noteText,
+      category,
+      authorId: currentUser.userId,
+      authorName: currentUser.fullName,
+      authorRole: currentUser.role,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMemberNotes((prev) => [newNote, ...prev]);
+
+    const timelineEntry = {
+      id: 'tim-' + Date.now(),
+      type: 'note' as const,
+      title: `Staff Note Added (${category.toUpperCase().replace('_', ' ')})`,
+      description: noteText,
+      timestamp: 'Just now',
+      author: currentUser.fullName,
+    };
+
+    setMembers((prev) =>
+      prev.map((m) => {
+        if (m.id === memberId) {
+          return {
+            ...m,
+            timeline: [timelineEntry, ...m.timeline],
+          };
+        }
+        return m;
+      })
+    );
+
+    closeAddNoteModal();
+
+    addToast({
+      title: 'Note Recorded',
+      message: `Operational note attached to ${member.name}'s profile.`,
+      type: 'success',
+    });
+  };
+
   // Retention Intelligence Layer calculations
   const { profiles: retentionProfiles, stats: retentionStats } = useMemo(() => {
     return calculateRetentionOverview(members, plans, payments, checkIns);
   }, [members, plans, payments, checkIns]);
+
+  const dailySummary = useMemo(() => {
+    return calculateDailySummary(members, checkIns, payments, retentionProfiles, organization.peakCapacity);
+  }, [members, checkIns, payments, retentionProfiles, organization.peakCapacity]);
 
   const logRetentionOutreach = async (memberId: string, actionType: string, notes?: string) => {
     const member = members.find((m) => m.id === memberId);
@@ -818,6 +1042,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentUser,
         appMode,
         signOut,
+        switchUserRole,
         members,
         plans,
         checkIns,
@@ -826,6 +1051,10 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isLoadingData,
         retentionProfiles,
         retentionStats,
+        memberNotes,
+        dailySummary,
+        fastCheckIn,
+        addMemberNote,
         checkInMember,
         checkOutMember,
         addMember,
@@ -859,6 +1088,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         invoiceModalData,
         openInvoiceModal,
         closeInvoiceModal,
+        isAddNoteModalOpen,
+        setAddNoteModalOpen,
+        addNoteModalData,
+        openAddNoteModal,
+        closeAddNoteModal,
+        isEndOfDayModalOpen,
+        setEndOfDayModalOpen,
+        openEndOfDayModal,
+        closeEndOfDayModal,
       }}
     >
       {children}

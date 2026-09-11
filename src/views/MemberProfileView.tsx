@@ -47,6 +47,8 @@ export const MemberProfileView: React.FC = () => {
     openPaymentModal,
     openInvoiceModal,
     openRenewModal,
+    openAddNoteModal,
+    memberNotes,
     payments,
     freezeMembership,
   } = useGym();
@@ -179,6 +181,16 @@ export const MemberProfileView: React.FC = () => {
               Collect Payment
             </Button>
           )}
+
+          {/* Add Staff Note (Phase 5) */}
+          <Button
+            size="sm"
+            variant="secondary"
+            leftIcon={<FileText className="w-3.5 h-3.5 text-brand-400" />}
+            onClick={() => openAddNoteModal(member)}
+          >
+            Add Note
+          </Button>
 
           {/* Freeze */}
           <Button
@@ -604,6 +616,65 @@ export const MemberProfileView: React.FC = () => {
               ) : (
                 <div className="p-4 rounded-xl bg-surface-200/50 text-xs text-zinc-400 text-center">
                   Prior annual invoice settled offline during registration.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Staff Notes & Coaching Directives (Phase 5) */}
+          <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-brand-400" />
+                  <span>Staff & Coaching Notes</span>
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Internal notes from front desk, trainers, and management
+                </p>
+              </div>
+              <Button
+                size="xs"
+                variant="secondary"
+                onClick={() => openAddNoteModal(member)}
+              >
+                + Add Note
+              </Button>
+            </div>
+
+            <div className="space-y-2.5">
+              {memberNotes.filter((n) => n.memberId === member.id).length > 0 ? (
+                memberNotes
+                  .filter((n) => n.memberId === member.id)
+                  .map((note) => (
+                    <div
+                      key={note.id}
+                      className="p-3.5 rounded-xl bg-surface-200/80 border border-white/[0.04] space-y-2 text-xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <Badge variant="neutral" size="xs">
+                          {note.category.toUpperCase().replace('_', ' ')}
+                        </Badge>
+                        <span className="text-[10px] text-zinc-500 font-mono">
+                          {new Date(note.createdAt).toLocaleDateString('en-IN', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-zinc-200 leading-relaxed font-sans">{note.note}</p>
+                      <div className="text-[11px] text-zinc-400 pt-1 border-t border-white/[0.04] flex items-center justify-between">
+                        <span>
+                          Author: <strong className="text-zinc-300">{note.authorName}</strong> ({note.authorRole.toUpperCase()})
+                        </span>
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                <div className="p-6 rounded-xl bg-surface-200/40 text-center text-xs text-zinc-500">
+                  No staff notes logged for this member yet.
                 </div>
               )}
             </div>

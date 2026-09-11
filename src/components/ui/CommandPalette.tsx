@@ -13,6 +13,9 @@ import {
   Sparkles,
   Phone,
   Flame,
+  Scan,
+  Dumbbell,
+  Calendar,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Badge } from './Badge';
@@ -28,6 +31,7 @@ export const CommandPalette: React.FC = () => {
     setAddMemberModalOpen,
     setCreatePlanModalOpen,
     openPaymentModal,
+    openEndOfDayModal,
   } = useGym();
 
   const [query, setQuery] = useState('');
@@ -56,6 +60,20 @@ export const CommandPalette: React.FC = () => {
     : [];
 
   const navigationActions = [
+    {
+      id: 'nav-front-desk',
+      label: 'Go to Front Desk & Scanner Console',
+      category: 'Navigation',
+      icon: <Scan className="w-4 h-4 text-cyan-400" />,
+      action: () => setActiveView('front_desk'),
+    },
+    {
+      id: 'nav-trainer-workspace',
+      label: 'Go to Trainer & Coaching Workspace',
+      category: 'Navigation',
+      icon: <Dumbbell className="w-4 h-4 text-emerald-400" />,
+      action: () => setActiveView('trainer_workspace'),
+    },
     {
       id: 'nav-overview',
       label: 'Go to Overview Dashboard',
@@ -103,10 +121,17 @@ export const CommandPalette: React.FC = () => {
   const quickActions = [
     {
       id: 'act-checkin',
-      label: 'Instant Check-in Desk',
+      label: 'Fast Front Desk Scanner',
       category: 'Actions',
-      icon: <CalendarCheck className="w-4 h-4 text-brand-400" />,
-      action: () => setCheckInModalOpen(true),
+      icon: <Scan className="w-4 h-4 text-cyan-400" />,
+      action: () => setActiveView('front_desk'),
+    },
+    {
+      id: 'act-eod',
+      label: 'End of Day Shift Reconciliation',
+      category: 'Actions',
+      icon: <Calendar className="w-4 h-4 text-brand-400" />,
+      action: () => openEndOfDayModal(),
     },
     {
       id: 'act-add-member',

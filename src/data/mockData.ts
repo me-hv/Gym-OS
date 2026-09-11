@@ -1,4 +1,4 @@
-import { Member, MembershipPlan, AttendanceRecord, PaymentTransaction, GymStats } from '../types';
+import { Member, MembershipPlan, AttendanceRecord, PaymentTransaction, GymStats, MemberNote } from '../types';
 
 export const INITIAL_GYM_STATS: GymStats = {
   activeMembers: 247,
@@ -1014,4 +1014,67 @@ export const HOURLY_ATTENDANCE_DATA = [
   { hour: '19:00', count: 86, capacity: 120 },
   { hour: '20:00', count: 62, capacity: 120 },
   { hour: '21:00', count: 24, capacity: 120 },
+];
+
+export const INITIAL_MEMBER_NOTES: MemberNote[] = [
+  {
+    id: 'note-001',
+    memberId: 'mem-101',
+    organizationId: 'org-pilot-001',
+    note: 'Completed first hypertrophy cycle. Increased deadlift PR to 160kg. Advised focusing on rotator cuff mobility during warmups.',
+    category: 'trainer',
+    authorName: 'Coach Vikram',
+    authorRole: 'trainer',
+    createdAt: '2026-09-10T11:30:00Z',
+  },
+  {
+    id: 'note-002',
+    memberId: 'mem-101',
+    organizationId: 'org-pilot-001',
+    note: 'Requested locker #42 allocation near steam room for next annual renewal.',
+    category: 'front_desk',
+    authorName: 'Front Desk - Rakesh',
+    authorRole: 'front_desk',
+    createdAt: '2026-09-08T09:15:00Z',
+  },
+  {
+    id: 'note-003',
+    memberId: 'mem-102',
+    organizationId: 'org-pilot-001',
+    note: 'Suffered minor lumbar strain during CrossFit session. Cleared by physio for low-impact cardio and machines only. No heavy compound lifts for 2 weeks.',
+    category: 'medical',
+    authorName: 'Coach Priya',
+    authorRole: 'trainer',
+    createdAt: '2026-09-09T17:45:00Z',
+  },
+  {
+    id: 'note-004',
+    memberId: 'mem-103',
+    organizationId: 'org-pilot-001',
+    note: 'Discussed renewal options. Requested UPI payment link for 6-Month Transformation plan.',
+    category: 'billing',
+    authorName: 'Front Desk - Rakesh',
+    authorRole: 'front_desk',
+    createdAt: '2026-09-11T08:20:00Z',
+  },
+  {
+    id: 'note-005',
+    memberId: 'mem-104',
+    organizationId: 'org-pilot-001',
+    note: 'Travel hold applied for 30 days due to overseas business trip. Automatic resume scheduled.',
+    category: 'general',
+    authorName: 'Alok Sharma',
+    authorRole: 'owner',
+    createdAt: '2026-08-25T14:00:00Z',
+  },
+  {
+    id: 'note-006',
+    memberId: 'mem-108',
+    organizationId: 'org-pilot-001',
+    note: 'New athlete onboarding: Completed initial fitness assessment. Goal set for 5kg muscle gain. Form check needed on barbell squats.',
+    category: 'trainer',
+    authorName: 'Coach Amit',
+    authorRole: 'trainer',
+    createdAt: '2026-09-05T10:00:00Z',
+  },
 ];

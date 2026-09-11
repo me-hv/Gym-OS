@@ -8,12 +8,18 @@ import { AttendanceView } from './views/AttendanceView';
 import { MembershipsView } from './views/MembershipsView';
 import { PaymentsView } from './views/PaymentsView';
 import { RetentionView } from './views/RetentionView';
+import { FrontDeskView } from './views/FrontDeskView';
+import { TrainerWorkspaceView } from './views/TrainerWorkspaceView';
 
 const AppContent: React.FC = () => {
   const { activeView } = useGym();
 
   const renderActiveView = () => {
     switch (activeView) {
+      case 'front_desk':
+        return <FrontDeskView />;
+      case 'trainer_workspace':
+        return <TrainerWorkspaceView />;
       case 'overview':
         return <OverviewView />;
       case 'retention':

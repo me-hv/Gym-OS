@@ -11,7 +11,6 @@ import {
 } from '../../services/retentionService';
 import {
   calculateMembershipStatus,
-  renewMembership,
   DEFAULT_PILOT_ORG,
 } from '../../services/gymService';
 import {

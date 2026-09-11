@@ -11,7 +11,16 @@ export type WorkoutGoal =
 export type UserRole = 'owner' | 'admin' | 'trainer' | 'front_desk';
 export type AppMode = 'production' | 'demo';
 
-export type ActiveNavView = 'overview' | 'members' | 'profile' | 'attendance' | 'memberships' | 'payments' | 'retention';
+export type ActiveNavView =
+  | 'overview'
+  | 'front_desk'
+  | 'members'
+  | 'profile'
+  | 'attendance'
+  | 'memberships'
+  | 'payments'
+  | 'retention'
+  | 'trainer_workspace';
 
 export interface TaxBreakdown {
   taxableAmountINR: number;
@@ -275,4 +284,89 @@ export interface RetentionStats {
   reengagedThisMonthCount: number;
   recoveredRevenueMTDINR: number;
   retentionRateDisplay: string; // e.g. "89.2%" or "Not enough history"
+}
+
+// ==============================================================================
+// PHASE 5: FRONT DESK & DAILY OPERATIONS OS TYPES
+// ==============================================================================
+
+export type NoteCategory = 'general' | 'trainer' | 'front_desk' | 'medical' | 'billing';
+
+export interface MemberNote {
+  id: string;
+  memberId: string;
+  organizationId: string;
+  note: string;
+  category: NoteCategory;
+  authorId?: string;
+  authorName: string;
+  authorRole: UserRole;
+  createdAt: string;
+}
+
+export type CheckInStatus = 'confirmed' | 'duplicate' | 'expired' | 'frozen' | 'not_found' | 'error';
+
+export interface FastCheckInResult {
+  success: boolean;
+  status: CheckInStatus;
+  member?: Member;
+  message: string;
+  checkInTime?: string;
+  currentFloorCount?: number;
+  peakCapacity?: number;
+  daysRemaining?: number;
+  cooldownRemainingMinutes?: number;
+  resumeDate?: string;
+}
+
+export interface DailyOperationsSummary {
+  date: string;
+  todayCheckInsCount: number;
+  currentFloorCount: number;
+  peakFloorCount: number;
+  capacityPercentage: number;
+  paymentsCollectedINR: number;
+  paymentsCount: number;
+  newMembersCount: number;
+  renewalsCount: number;
+  expirationsCount: number;
+  expiringTodayCount: number;
+  retentionContactsCount: number;
+  revenueProtectedINR: number;
+  onboardingActiveCount: number;
+}
+
+export interface OnboardingQueueItem {
+  memberId: string;
+  memberCode: string;
+  name: string;
+  avatarUrl?: string;
+  phone: string;
+  joinDate: string;
+  daysActive: number; // e.g. Day 3 of 21
+  planName: string;
+  assignedTrainer: string;
+  totalVisits: number;
+  lastVisit: string;
+  lastVisitDate: string;
+  goal: WorkoutGoal;
+  needsFollowUp: boolean;
+}
+
+export interface TrainerMemberItem {
+  memberId: string;
+  memberCode: string;
+  name: string;
+  avatarUrl?: string;
+  phone: string;
+  planName: string;
+  goal: WorkoutGoal;
+  attendanceRate: number;
+  weeklyFrequency: number;
+  lastVisit: string;
+  lastVisitDate: string;
+  isCurrentlyOnFloor?: boolean;
+  hasAttendanceDecline: boolean;
+  notesCount: number;
+  status: MemberStatus;
 }

@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 import { MemberStatus, PaymentStatus } from '../../types';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: MemberStatus | PaymentStatus | 'neutral' | 'brand' | 'cyan' | 'purple';
+  variant?: MemberStatus | PaymentStatus | 'neutral' | 'brand' | 'cyan' | 'purple' | 'success' | 'warning' | 'danger' | 'info';
   size?: 'xs' | 'sm' | 'md';
   dot?: boolean;
 }
@@ -27,23 +27,27 @@ export const Badge: React.FC<BadgeProps> = ({
     switch (variant) {
       case 'active':
       case 'paid':
+      case 'success':
         return {
           container: 'bg-emerald-500/10 text-emerald-400',
           dot: 'bg-emerald-400',
         };
       case 'expiring':
       case 'pending':
+      case 'warning':
         return {
           container: 'bg-amber-500/10 text-amber-300',
           dot: 'bg-amber-400',
         };
       case 'expired':
       case 'overdue':
+      case 'danger':
         return {
           container: 'bg-rose-500/10 text-rose-300',
           dot: 'bg-rose-400',
         };
       case 'frozen':
+      case 'info':
         return {
           container: 'bg-cyan-500/10 text-cyan-300',
           dot: 'bg-cyan-400',

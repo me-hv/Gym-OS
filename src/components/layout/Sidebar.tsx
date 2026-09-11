@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGym, ActiveNavView } from '../../context/GymContext';
 import {
   LayoutDashboard,
@@ -15,8 +15,13 @@ import {
   Zap,
   LogOut,
   Flame,
+  Scan,
+  Activity,
+  ShieldCheck,
+  Check,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { UserRole } from '../../types';
 
 export const Sidebar: React.FC = () => {
   const {
@@ -26,13 +31,28 @@ export const Sidebar: React.FC = () => {
     retentionStats,
     organization,
     currentUser,
+    switchUserRole,
     signOut,
     setCheckInModalOpen,
   } = useGym();
 
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+
   const atRiskCount = (retentionStats?.highRiskCount || 0) + (retentionStats?.criticalRiskCount || 0);
 
-  const primaryNavItems: { id: ActiveNavView; label: string; icon: React.ReactNode; badge?: string | number }[] = [
+  const primaryNavItems: { id: ActiveNavView; label: string; icon: React.ReactNode; badge?: string | number; badgeColor?: string }[] = [
+    {
+      id: 'front_desk',
+      label: 'Front Desk',
+      icon: <Scan className="w-4 h-4 text-cyan-400" />,
+      badge: `${gymStats.currentFloorCount} floor`,
+      badgeColor: 'bg-cyan-500/20 text-cyan-300',
+    },
+    {
+      id: 'trainer_workspace',
+      label: 'Trainer Workspace',
+      icon: <Dumbbell className="w-4 h-4 text-emerald-400" />,
+    },
     {
       id: 'overview',
       label: 'Overview',
@@ -174,7 +194,9 @@ export const Sidebar: React.FC = () => {
                   <span
                     className={clsx(
                       'text-[10px] font-mono px-1.5 py-0.2 rounded-md font-medium tabular-nums',
-                      isActive
+                      item.badgeColor
+                        ? item.badgeColor
+                        : isActive
                         ? 'bg-brand-500/20 text-brand-300'
                         : String(item.badge).includes('due')
                         ? 'bg-rose-500/20 text-rose-300'
@@ -212,8 +234,48 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Profile / Quick Desk Check-In */}
-      <div className="p-3 bg-surface-300">
+      {/* Bottom Profile / Quick Desk Check-In & Role Switcher */}
+      <div className="p-3 bg-surface-300 relative">
+        {/* Role Selector Popup */}
+        {isRoleDropdownOpen && (
+          <div className="absolute bottom-28 left-3 right-3 p-2 rounded-xl bg-surface-100 border border-surface-200 shadow-2xl z-30 space-y-1">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 px-2 py-1 flex items-center justify-between">
+              <span>Switch Workspace Persona</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-brand-400" />
+            </div>
+            {(
+              [
+                { role: 'owner' as UserRole, label: 'Alok Sharma', title: 'Owner / General Manager' },
+                { role: 'front_desk' as UserRole, label: 'Rakesh Desk Lead', title: 'Front Desk Lead' },
+                { role: 'trainer' as UserRole, label: 'Coach Vikram', title: 'Head Strength Coach' },
+              ]
+            ).map((p) => (
+              <button
+                key={p.role}
+                type="button"
+                onClick={() => {
+                  switchUserRole(p.role);
+                  setIsRoleDropdownOpen(false);
+                  if (p.role === 'front_desk') setActiveView('front_desk');
+                  else if (p.role === 'trainer') setActiveView('trainer_workspace');
+                  else setActiveView('overview');
+                }}
+                className={`w-full flex items-center justify-between p-2 rounded-lg text-left text-xs transition-colors ${
+                  currentUser.role === p.role
+                    ? 'bg-brand-500/10 text-brand-300 border border-brand-500/20'
+                    : 'text-zinc-300 hover:bg-surface-200'
+                }`}
+              >
+                <div>
+                  <div className="font-semibold text-white">{p.label}</div>
+                  <div className="text-[10px] text-zinc-400 capitalize">{p.title}</div>
+                </div>
+                {currentUser.role === p.role && <Check className="w-3.5 h-3.5 text-brand-400" />}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Quick check in bar inside sidebar */}
         <button
           onClick={() => setCheckInModalOpen(true)}
@@ -223,21 +285,27 @@ export const Sidebar: React.FC = () => {
           <span>Quick Desk Check-in</span>
         </button>
 
-        {/* User profile tile */}
+        {/* User profile tile with Role Switcher trigger */}
         <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface-200/50">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-full bg-surface-100 flex items-center justify-center text-xs font-bold text-zinc-200 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsRoleDropdownOpen((prev) => !prev)}
+            className="flex items-center gap-2.5 min-w-0 text-left hover:opacity-90 transition-opacity"
+            title="Click to Switch Persona (Owner / Front Desk / Trainer)"
+          >
+            <div className="w-7 h-7 rounded-full bg-brand-500/20 border border-brand-500/30 flex items-center justify-center text-xs font-bold text-brand-400 shrink-0">
               {currentUser.fullName ? currentUser.fullName.split(' ').map((n) => n[0]).join('') : 'VM'}
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-semibold text-zinc-200 truncate">
-                {currentUser.fullName}
+              <div className="text-xs font-semibold text-zinc-200 truncate flex items-center gap-1">
+                <span>{currentUser.fullName}</span>
+                <ChevronDown className="w-3 h-3 text-zinc-400" />
               </div>
-              <div className="text-[10px] text-zinc-400 truncate font-mono capitalize">
-                {currentUser.role}
+              <div className="text-[10px] text-brand-400 truncate font-mono uppercase tracking-wider">
+                {currentUser.role.replace('_', ' ')}
               </div>
             </div>
-          </div>
+          </button>
           <button
             onClick={signOut}
             className="text-zinc-400 hover:text-rose-400 p-1 rounded-md hover:bg-surface-100 transition-colors"

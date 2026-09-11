@@ -43,6 +43,7 @@ export const OverviewView: React.FC = () => {
     openWhatsAppModal,
     setCheckInModalOpen,
     setAddMemberModalOpen,
+    openEndOfDayModal,
   } = useGym();
 
   const topAtRiskProfiles = retentionProfiles
@@ -53,6 +54,34 @@ export const OverviewView: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Executive Fast Command Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-surface-300 border border-white/[0.04]">
+        <div className="flex items-center gap-2 text-xs text-zinc-300">
+          <Activity className="w-4 h-4 text-cyan-400" />
+          <span>
+            Live Floor: <strong className="text-white font-mono">{gymStats.currentFloorCount}</strong> athletes • Today's Check-Ins: <strong className="text-white font-mono">{gymStats.todayAttendance}</strong>
+          </span>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setActiveView('front_desk')}
+          >
+            <Zap className="w-3.5 h-3.5 mr-1.5 text-cyan-400" />
+            Front Desk Console
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={openEndOfDayModal}
+          >
+            <CalendarCheck className="w-3.5 h-3.5 mr-1.5 text-brand-400" />
+            End of Day Shift Summary
+          </Button>
+        </div>
+      </div>
+
       {/* 5-Second Executive Glance KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Active Members */}

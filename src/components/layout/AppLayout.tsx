@@ -10,6 +10,8 @@ import { RecordPaymentModal } from '../shared/RecordPaymentModal';
 import { InvoiceDetailModal } from '../shared/InvoiceDetailModal';
 import { CreatePlanModal } from '../shared/CreatePlanModal';
 import { RenewMembershipModal } from '../shared/RenewMembershipModal';
+import { AddMemberNoteModal } from '../shared/AddMemberNoteModal';
+import { EndOfDaySummaryModal } from '../shared/EndOfDaySummaryModal';
 
 export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
@@ -40,6 +42,8 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       <RecordPaymentModal />
       <InvoiceDetailModal />
       <CreatePlanModal />
+      <AddMemberNoteModal />
+      <EndOfDaySummaryModal />
     </div>
   );
 };
