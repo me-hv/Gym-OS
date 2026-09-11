@@ -1,6 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+'use client';
+
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Member, MembershipPlan, AttendanceRecord, PaymentTransaction, GymStats, MemberStatus } from '../types';
 import { INITIAL_MEMBERS, MEMBERSHIP_PLANS, INITIAL_CHECKINS, INITIAL_PAYMENTS, INITIAL_GYM_STATS } from '../data/mockData';
+import { gymService, OrgProfile, UserSession, DEFAULT_PILOT_ORG, DEFAULT_PILOT_USER } from '../services/gymService';
+import { createClient } from '../lib/supabase/client';
 
 export type ActiveNavView = 'overview' | 'members' | 'profile' | 'attendance' | 'memberships' | 'payments';
 
@@ -18,11 +22,17 @@ interface GymContextType {
   setSelectedMemberId: (id: string | null) => void;
   viewMemberProfile: (id: string) => void;
 
+  // Tenant / Auth Session
+  organization: OrgProfile;
+  currentUser: UserSession;
+  signOut: () => Promise<void>;
+
   members: Member[];
   plans: MembershipPlan[];
   checkIns: AttendanceRecord[];
   payments: PaymentTransaction[];
   gymStats: GymStats;
+  isLoadingData: boolean;
 
   // Actions
   checkInMember: (memberId: string) => { success: boolean; message: string };
@@ -67,6 +77,10 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeView, setActiveView] = useState<ActiveNavView>('overview');
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
+  const [organization, setOrganization] = useState<OrgProfile>(DEFAULT_PILOT_ORG);
+  const [currentUser, setCurrentUser] = useState<UserSession>(DEFAULT_PILOT_USER);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
   const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
   const [plans, setPlans] = useState<MembershipPlan[]>(MEMBERSHIP_PLANS);
   const [checkIns, setCheckIns] = useState<AttendanceRecord[]>(INITIAL_CHECKINS);
@@ -97,7 +111,50 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     payment: null,
   });
 
-  // Global Keyboard Shortcuts (Cmd+K / Ctrl+K, C for check-in)
+  // Re-calculate dashboard metrics whenever members, checkIns, or payments change
+  const refreshStats = useCallback((mList: Member[], cList: AttendanceRecord[], pList: PaymentTransaction[], peakCap: number) => {
+    const recalculated = gymService.calculateDashboardMetrics(mList, cList, pList, peakCap);
+    setGymStats(recalculated);
+  }, []);
+
+  // Initialize tenant session & data
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadTenantData() {
+      try {
+        const session = await gymService.getCurrentSession();
+        if (!isMounted) return;
+        setCurrentUser(session);
+
+        const org = await gymService.getOrganization(session.organizationId);
+        if (!isMounted) return;
+        setOrganization(org);
+
+        const [loadedMembers, loadedPlans] = await Promise.all([
+          gymService.getMembers(session.organizationId),
+          gymService.getPlans(session.organizationId),
+        ]);
+
+        if (!isMounted) return;
+        setMembers(loadedMembers);
+        setPlans(loadedPlans);
+        refreshStats(loadedMembers, INITIAL_CHECKINS, INITIAL_PAYMENTS, org.peakCapacity);
+      } catch (err) {
+        console.error('Failed loading tenant data from Supabase:', err);
+      } finally {
+        if (isMounted) setIsLoadingData(false);
+      }
+    }
+
+    loadTenantData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshStats]);
+
+  // Global Keyboard Shortcuts (Cmd+K / Ctrl+K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -124,7 +181,19 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const viewMemberProfile = (id: string) => {
     setSelectedMemberId(id);
     setActiveView('profile');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const signOut = async () => {
+    const supabase = createClient();
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   };
 
   const checkInMember = (memberId: string): { success: boolean; message: string } => {
@@ -132,7 +201,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!member) {
       addToast({
         title: 'Member Not Found',
-        message: `No active member located with identifier "${memberId}"`,
+        message: `No active athlete located with identifier "${memberId}"`,
         type: 'error',
       });
       return { success: false, message: 'Member not found' };
@@ -141,7 +210,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (member.status === 'expired') {
       addToast({
         title: 'Check-in Warning: Expired Membership',
-        message: `${member.name}'s membership expired. Please renew plan before floor access.`,
+        message: `${member.name}'s membership expired. Please renew plan before floor entry.`,
         type: 'warning',
       });
     } else if (member.status === 'frozen') {
@@ -171,51 +240,45 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isToday: true,
     };
 
-    setCheckIns((prev) => [newRecord, ...prev]);
+    const updatedCheckIns = [newRecord, ...checkIns];
+    setCheckIns(updatedCheckIns);
 
-    // Update member's last visit & count
-    setMembers((prev) =>
-      prev.map((m) => {
-        if (m.id === member.id) {
-          return {
-            ...m,
-            lastVisit: `Today, ${timeStr}`,
-            lastVisitDate: dateStr,
-            totalVisits: m.totalVisits + 1,
-            monthlyVisits: m.monthlyVisits + 1,
-            attendanceHistory: [
-              {
-                id: 'att-' + Date.now(),
-                date: dateStr,
-                time: timeStr,
-                durationMinutes: 60,
-                workoutType: 'Floor Workout',
-                trainerName: m.assignedTrainer,
-              },
-              ...m.attendanceHistory,
-            ],
-            timeline: [
-              {
-                id: 'tim-' + Date.now(),
-                type: 'checkin',
-                title: 'Checked in at Reception',
-                description: `Floor entry logged at ${timeStr}`,
-                timestamp: `Today, ${timeStr}`,
-              },
-              ...m.timeline,
-            ],
-          };
-        }
-        return m;
-      })
-    );
+    const updatedMembers = members.map((m) => {
+      if (m.id === member.id) {
+        return {
+          ...m,
+          lastVisit: `Today, ${timeStr}`,
+          lastVisitDate: dateStr,
+          totalVisits: m.totalVisits + 1,
+          monthlyVisits: m.monthlyVisits + 1,
+          attendanceHistory: [
+            {
+              id: 'att-' + Date.now(),
+              date: dateStr,
+              time: timeStr,
+              durationMinutes: 60,
+              workoutType: 'Floor Workout',
+              trainerName: m.assignedTrainer,
+            },
+            ...m.attendanceHistory,
+          ],
+          timeline: [
+            {
+              id: 'tim-' + Date.now(),
+              type: 'checkin' as const,
+              title: 'Checked in at Reception Desk',
+              description: `Floor entry logged at ${timeStr}`,
+              timestamp: `Today, ${timeStr}`,
+            },
+            ...m.timeline,
+          ],
+        };
+      }
+      return m;
+    });
 
-    // Update stats
-    setGymStats((prev) => ({
-      ...prev,
-      todayAttendance: prev.todayAttendance + 1,
-      currentFloorCount: Math.min(prev.peakCapacity, prev.currentFloorCount + 1),
-    }));
+    setMembers(updatedMembers);
+    refreshStats(updatedMembers, updatedCheckIns, payments, organization.peakCapacity);
 
     addToast({
       title: 'Check-in Recorded',
@@ -261,54 +324,50 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ],
     };
 
-    setMembers((prev) => [newMember, ...prev]);
+    const updatedMembers = [newMember, ...members];
+    setMembers(updatedMembers);
 
-    // Update plan count
-    setPlans((prev) =>
-      prev.map((p) => (p.id === memberData.planId ? { ...p, activeMembersCount: p.activeMembersCount + 1 } : p))
+    const updatedPlans = plans.map((p) =>
+      p.id === memberData.planId ? { ...p, activeMembersCount: p.activeMembersCount + 1 } : p
     );
+    setPlans(updatedPlans);
 
-    // Update Stats
-    setGymStats((prev) => ({
-      ...prev,
-      activeMembers: prev.activeMembers + 1,
-      totalMembers: prev.totalMembers + 1,
-      newSignupsThisMonth: prev.newSignupsThisMonth + 1,
-    }));
+    refreshStats(updatedMembers, checkIns, payments, organization.peakCapacity);
 
     addToast({
       title: 'Member Enrolled',
-      message: `${newMember.name} has been enrolled under ${newMember.planName} (${code}).`,
+      message: `${newMember.name} enrolled under ${newMember.planName} (${code}).`,
       type: 'success',
     });
   };
 
   const updateMemberStatus = (memberId: string, status: MemberStatus) => {
-    setMembers((prev) =>
-      prev.map((m) => {
-        if (m.id === memberId) {
-          return {
-            ...m,
-            status,
-            timeline: [
-              {
-                id: 'tim-' + Date.now(),
-                type: 'status_change',
-                title: `Status Changed to ${status.toUpperCase()}`,
-                description: `Member status updated manually in dashboard`,
-                timestamp: 'Just now',
-              },
-              ...m.timeline,
-            ],
-          };
-        }
-        return m;
-      })
-    );
+    const updatedMembers = members.map((m) => {
+      if (m.id === memberId) {
+        return {
+          ...m,
+          status,
+          timeline: [
+            {
+              id: 'tim-' + Date.now(),
+              type: 'status_change' as const,
+              title: `Status Changed to ${status.toUpperCase()}`,
+              description: `Member status updated in dashboard`,
+              timestamp: 'Just now',
+            },
+            ...m.timeline,
+          ],
+        };
+      }
+      return m;
+    });
+
+    setMembers(updatedMembers);
+    refreshStats(updatedMembers, checkIns, payments, organization.peakCapacity);
 
     addToast({
       title: 'Status Updated',
-      message: `Member status has been updated to ${status}.`,
+      message: `Member status updated to ${status}.`,
       type: 'info',
     });
   };
@@ -321,39 +380,33 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       invoiceNumber: invNum,
     };
 
-    setPayments((prev) => [newPayment, ...prev]);
+    const updatedPayments = [newPayment, ...payments];
+    setPayments(updatedPayments);
 
-    // Update member payment status
-    setMembers((prev) =>
-      prev.map((m) => {
-        if (m.id === paymentData.memberId) {
-          return {
-            ...m,
-            paymentStatus: 'paid',
-            pendingAmountINR: 0,
-            status: m.status === 'expired' ? 'active' : m.status,
-            timeline: [
-              {
-                id: 'tim-' + Date.now(),
-                type: 'payment',
-                title: `Payment Received — ₹${paymentData.totalINR.toLocaleString('en-IN')}`,
-                description: `Invoice ${invNum} paid via ${paymentData.paymentMethod || 'Direct'}`,
-                timestamp: 'Just now',
-              },
-              ...m.timeline,
-            ],
-          };
-        }
-        return m;
-      })
-    );
+    const updatedMembers = members.map((m) => {
+      if (m.id === paymentData.memberId) {
+        return {
+          ...m,
+          paymentStatus: 'paid' as const,
+          pendingAmountINR: 0,
+          status: m.status === 'expired' ? ('active' as const) : m.status,
+          timeline: [
+            {
+              id: 'tim-' + Date.now(),
+              type: 'payment' as const,
+              title: `Payment Received — ₹${paymentData.totalINR.toLocaleString('en-IN')}`,
+              description: `Invoice ${invNum} paid via ${paymentData.paymentMethod || 'Direct'}`,
+              timestamp: 'Just now',
+            },
+            ...m.timeline,
+          ],
+        };
+      }
+      return m;
+    });
 
-    // Update gym stats
-    setGymStats((prev) => ({
-      ...prev,
-      monthlyRevenueINR: prev.monthlyRevenueINR + paymentData.totalINR,
-      revenueAtRiskINR: Math.max(0, prev.revenueAtRiskINR - paymentData.totalINR),
-    }));
+    setMembers(updatedMembers);
+    refreshStats(updatedMembers, checkIns, updatedPayments, organization.peakCapacity);
 
     addToast({
       title: 'Payment Recorded',
@@ -375,7 +428,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     addToast({
       title: 'Plan Created',
-      message: `New plan "${newPlan.name}" added at ₹${newPlan.priceINR.toLocaleString('en-IN')}.`,
+      message: `New plan "${newPlan.name}" published at ₹${newPlan.priceINR.toLocaleString('en-IN')}.`,
       type: 'success',
     });
   };
@@ -383,7 +436,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const openWhatsAppModal = (member: Member, customMsg?: string) => {
     const defaultMsg =
       customMsg ||
-      `Hi ${member.name.split(' ')[0]}, this is Coach Vikram from Pulse Fitness & Performance. We noticed your ${member.planName} membership expires in ${member.daysRemaining > 0 ? member.daysRemaining + ' days' : 'recently'}. Renew today to lock in your preferential rate and uninterrupted gym access! Click here to renew: https://pulsefit.in/renew/${member.memberCode}`;
+      `Hi ${member.name.split(' ')[0]}, this is Coach Vikram from ${organization.name}. We noticed your ${member.planName} membership expires in ${member.daysRemaining > 0 ? member.daysRemaining + ' days' : 'recently'}. Renew today to lock in your preferential rate and uninterrupted gym access! Click here to renew: https://pulsefit.in/renew/${member.memberCode}`;
 
     setWhatsAppModalData({
       isOpen: true,
@@ -434,33 +487,34 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
 
-    setMembers((prev) =>
-      prev.map((m) => {
-        if (m.id === memberId) {
-          const currentExp = new Date(m.expiryDate);
-          currentExp.setDate(currentExp.getDate() + days);
-          const newExpStr = currentExp.toISOString().split('T')[0];
+    const updatedMembers = members.map((m) => {
+      if (m.id === memberId) {
+        const currentExp = new Date(m.expiryDate);
+        currentExp.setDate(currentExp.getDate() + days);
+        const newExpStr = currentExp.toISOString().split('T')[0];
 
-          return {
-            ...m,
-            status: 'frozen',
-            expiryDate: newExpStr,
-            daysRemaining: m.daysRemaining + days,
-            timeline: [
-              {
-                id: 'tim-' + Date.now(),
-                type: 'status_change',
-                title: `Membership Frozen (${days} Days)`,
-                description: `Paused until expiry adjusted to ${newExpStr}. Reason: ${reason}`,
-                timestamp: 'Just now',
-              },
-              ...m.timeline,
-            ],
-          };
-        }
-        return m;
-      })
-    );
+        return {
+          ...m,
+          status: 'frozen' as const,
+          expiryDate: newExpStr,
+          daysRemaining: m.daysRemaining + days,
+          timeline: [
+            {
+              id: 'tim-' + Date.now(),
+              type: 'status_change' as const,
+              title: `Membership Frozen (${days} Days)`,
+              description: `Paused until expiry adjusted to ${newExpStr}. Reason: ${reason}`,
+              timestamp: 'Just now',
+            },
+            ...m.timeline,
+          ],
+        };
+      }
+      return m;
+    });
+
+    setMembers(updatedMembers);
+    refreshStats(updatedMembers, checkIns, payments, organization.peakCapacity);
 
     addToast({
       title: 'Membership Frozen',
@@ -493,11 +547,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         selectedMemberId,
         setSelectedMemberId,
         viewMemberProfile,
+        organization,
+        currentUser,
+        signOut,
         members,
         plans,
         checkIns,
         payments,
         gymStats,
+        isLoadingData,
         checkInMember,
         addMember,
         updateMemberStatus,

@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Sparkles,
   Zap,
+  LogOut,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -23,7 +24,15 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = () => {
-  const { activeView, setActiveView, gymStats, setCheckInModalOpen, setAddMemberModalOpen } = useGym();
+  const {
+    activeView,
+    setActiveView,
+    gymStats,
+    organization,
+    currentUser,
+    signOut,
+    setCheckInModalOpen,
+  } = useGym();
 
   const primaryNavItems: { id: ActiveNavView; label: string; icon: React.ReactNode; badge?: string | number }[] = [
     {
@@ -100,12 +109,12 @@ export const Sidebar: React.FC<SidebarProps> = () => {
               </span>
             </div>
           </div>
-          <span className="text-[10px] font-mono text-zinc-500 bg-surface-200 px-1.5 py-0.5 rounded border border-border-subtle">
-            v1.0
+          <span className="text-[10px] font-mono text-zinc-400 bg-surface-200 px-1.5 py-0.5 rounded border border-border-subtle">
+            SaaS v1.0
           </span>
         </div>
 
-        {/* Location / Branch Selector */}
+        {/* Tenant Organization Selector */}
         <div className="p-3 border-b border-border-subtle">
           <button className="w-full flex items-center justify-between p-2 rounded-lg bg-surface-200/80 border border-border-subtle hover:border-zinc-700 transition-colors text-left group">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -114,9 +123,11 @@ export const Sidebar: React.FC<SidebarProps> = () => {
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-semibold text-zinc-200 truncate group-hover:text-white">
-                  Pulse Fitness & Performance
+                  {organization.name}
                 </div>
-                <div className="text-[10px] text-zinc-400 truncate">Indiranagar, Bengaluru</div>
+                <div className="text-[10px] text-zinc-400 truncate">
+                  {organization.city}, {organization.currency}
+                </div>
               </div>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300 shrink-0" />
@@ -208,26 +219,26 @@ export const Sidebar: React.FC<SidebarProps> = () => {
         <div className="flex items-center justify-between p-2 rounded-lg bg-surface-200/60 border border-border-subtle">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-brand-500 flex items-center justify-center text-xs font-bold text-zinc-950 shrink-0">
-              VM
+              {currentUser.fullName ? currentUser.fullName.split(' ').map((n) => n[0]).join('') : 'VM'}
             </div>
             <div className="min-w-0">
               <div className="text-xs font-semibold text-zinc-200 truncate">
-                Vikramaditya (Owner)
+                {currentUser.fullName}
               </div>
-              <div className="text-[10px] text-zinc-400 truncate font-mono">
-                Admin • Full Access
+              <div className="text-[10px] text-zinc-400 truncate font-mono capitalize">
+                {currentUser.role} • Active
               </div>
             </div>
           </div>
-          <button
-            className="text-zinc-400 hover:text-zinc-200 p-1 rounded hover:bg-surface-100 transition-colors"
-            title="System Settings"
-            onClick={() => {
-              setActiveView('memberships');
-            }}
-          >
-            <Settings className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={signOut}
+              className="text-zinc-400 hover:text-rose-400 p-1 rounded hover:bg-surface-100 transition-colors"
+              title="Sign Out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </aside>
