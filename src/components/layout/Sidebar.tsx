@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Zap,
   LogOut,
+  Flame,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -22,17 +23,26 @@ export const Sidebar: React.FC = () => {
     activeView,
     setActiveView,
     gymStats,
+    retentionStats,
     organization,
     currentUser,
     signOut,
     setCheckInModalOpen,
   } = useGym();
 
+  const atRiskCount = (retentionStats?.highRiskCount || 0) + (retentionStats?.criticalRiskCount || 0);
+
   const primaryNavItems: { id: ActiveNavView; label: string; icon: React.ReactNode; badge?: string | number }[] = [
     {
       id: 'overview',
       label: 'Overview',
       icon: <LayoutDashboard className="w-4 h-4" />,
+    },
+    {
+      id: 'retention',
+      label: 'Retention',
+      icon: <Flame className="w-4 h-4 text-orange-400" />,
+      badge: atRiskCount > 0 ? `${atRiskCount} risk` : undefined,
     },
     {
       id: 'members',

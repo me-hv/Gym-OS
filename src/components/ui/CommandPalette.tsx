@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Sparkles,
   Phone,
+  Flame,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Badge } from './Badge';
@@ -61,6 +62,13 @@ export const CommandPalette: React.FC = () => {
       category: 'Navigation',
       icon: <LayoutDashboard className="w-4 h-4 text-brand-400" />,
       action: () => setActiveView('overview'),
+    },
+    {
+      id: 'nav-retention',
+      label: 'Go to Retention Command Center',
+      category: 'Navigation',
+      icon: <Flame className="w-4 h-4 text-orange-400" />,
+      action: () => setActiveView('retention'),
     },
     {
       id: 'nav-members',

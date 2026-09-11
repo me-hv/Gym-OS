@@ -26,6 +26,9 @@ import {
   RefreshCw,
   LogOut,
   Layers,
+  Flame,
+  TrendingDown,
+  Zap,
 } from 'lucide-react';
 import { Member, PaymentTransaction } from '../types';
 
@@ -33,6 +36,10 @@ export const MemberProfileView: React.FC = () => {
   const {
     selectedMemberId,
     members,
+    plans,
+    checkIns,
+    retentionProfiles,
+    logRetentionOutreach,
     setActiveView,
     checkInMember,
     checkOutMember,
@@ -48,8 +55,11 @@ export const MemberProfileView: React.FC = () => {
   const [freezeDays, setFreezeDays] = useState(14);
   const [freezeReason, setFreezeReason] = useState('Medical hold / travel');
   const [isFreezing, setIsFreezing] = useState(false);
+  const [isLoggingOutreach, setIsLoggingOutreach] = useState(false);
 
   const member = members.find((m) => m.id === selectedMemberId) || members[0];
+
+  const retentionProfile = retentionProfiles.find((p) => p.memberId === member?.id);
 
   if (!member) {
     return (
@@ -379,6 +389,133 @@ export const MemberProfileView: React.FC = () => {
 
         {/* Right 2 Columns: Attendance Matrix, Invoices & Timeline */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Retention Health & Risk Intelligence Dossier */}
+          {retentionProfile && (
+            <div className="rounded-2xl p-6 bg-surface-300 shadow-surface relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.04]">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400">
+                    <Flame className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                      <span>Retention Health & Churn Risk</span>
+                      <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-surface-200 text-zinc-300 font-semibold">
+                        Rank #{retentionProfile.priorityRank}
+                      </span>
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Deterministic operational risk analysis • {retentionProfile.reasons.length} risk factor{retentionProfile.reasons.length === 1 ? '' : 's'} identified
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className={`text-xs font-bold px-3 py-1 rounded-full font-mono flex items-center gap-1.5 ${
+                      retentionProfile.riskLevel === 'critical'
+                        ? 'bg-rose-500/20 text-rose-300'
+                        : retentionProfile.riskLevel === 'high'
+                        ? 'bg-orange-500/20 text-orange-300'
+                        : retentionProfile.riskLevel === 'moderate'
+                        ? 'bg-amber-500/20 text-amber-300'
+                        : retentionProfile.riskLevel === 'frozen'
+                        ? 'bg-sky-500/20 text-sky-300'
+                        : retentionProfile.riskLevel === 'recovered'
+                        ? 'bg-purple-500/20 text-purple-300'
+                        : 'bg-emerald-500/20 text-emerald-300'
+                    }`}
+                  >
+                    {retentionProfile.riskScore}/100 {retentionProfile.riskLevel.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Signals Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
+                <div className="p-3 rounded-xl bg-surface-200">
+                  <div className="text-[10px] uppercase font-semibold text-zinc-400">Revenue at Risk</div>
+                  <div className="text-sm font-bold font-mono text-zinc-100 mt-0.5">
+                    ₹{retentionProfile.revenueAtRiskINR.toLocaleString('en-IN')}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-surface-200">
+                  <div className="text-[10px] uppercase font-semibold text-zinc-400">Days Since Visit</div>
+                  <div className="text-sm font-bold font-mono text-zinc-100 mt-0.5">
+                    {retentionProfile.daysSinceLastVisit === 0 ? 'Today' : `${retentionProfile.daysSinceLastVisit} days`}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-surface-200">
+                  <div className="text-[10px] uppercase font-semibold text-zinc-400">30d Attendance Trend</div>
+                  <div
+                    className={`text-sm font-bold font-mono mt-0.5 flex items-center gap-1 ${
+                      retentionProfile.attendanceTrendPercent < 0
+                        ? 'text-rose-400'
+                        : retentionProfile.attendanceTrendPercent > 0
+                        ? 'text-emerald-400'
+                        : 'text-zinc-300'
+                    }`}
+                  >
+                    {retentionProfile.attendanceTrendPercent !== 0 && (
+                      <TrendingDown className="w-3.5 h-3.5" />
+                    )}
+                    {retentionProfile.attendanceTrendPercent === 0
+                      ? 'Stable'
+                      : `${retentionProfile.attendanceTrendPercent}%`}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-surface-200">
+                  <div className="text-[10px] uppercase font-semibold text-zinc-400">Lifetime Revenue</div>
+                  <div className="text-sm font-bold font-mono text-brand-300 mt-0.5">
+                    ₹{retentionProfile.historicalLifetimeValueINR.toLocaleString('en-IN')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Explainable Reasons */}
+              <div className="p-3.5 rounded-xl bg-surface-200/60 space-y-1.5 text-xs">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+                  Why this athlete is flagged:
+                </div>
+                {retentionProfile.reasons.map((reason, idx) => (
+                  <div key={idx} className="flex items-start gap-1.5 text-zinc-300">
+                    <span className="text-amber-400 font-bold">•</span>
+                    <span>{reason}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recommended Action & Trigger Button */}
+              <div className="mt-4 pt-3 border-t border-white/[0.04] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                <div>
+                  <span className="text-zinc-400">Recommended Next Step: </span>
+                  <strong className="text-white ml-1">{retentionProfile.recommendedAction}</strong>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="primary"
+                  leftIcon={<Send className="w-3.5 h-3.5" />}
+                  onClick={async () => {
+                    setIsLoggingOutreach(true);
+                    try {
+                      await logRetentionOutreach(member.id, retentionProfile.recommendedActionType);
+                      openWhatsAppModal(member);
+                    } finally {
+                      setIsLoggingOutreach(false);
+                    }
+                  }}
+                  disabled={isLoggingOutreach}
+                >
+                  Log & Send Outreach
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Attendance Heatmap Matrix */}
           <div className="rounded-2xl p-6 bg-surface-300 shadow-surface">
             <div className="flex items-center justify-between mb-4">

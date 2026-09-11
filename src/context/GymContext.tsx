@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Member,
   MembershipPlan,
@@ -10,6 +10,9 @@ import {
   MemberStatus,
   RenewalPayload,
   AppMode,
+  ActiveNavView,
+  MemberRetentionProfile,
+  RetentionStats,
 } from '../types';
 import {
   INITIAL_MEMBERS,
@@ -27,9 +30,10 @@ import {
   GymOperationError,
   getAppMode,
 } from '../services/gymService';
+import { calculateRetentionOverview } from '../services/retentionService';
 import { createClient } from '../lib/supabase/client';
 
-export type ActiveNavView = 'overview' | 'members' | 'profile' | 'attendance' | 'memberships' | 'payments';
+export type { ActiveNavView };
 
 export interface ToastItem {
   id: string;
@@ -58,6 +62,10 @@ interface GymContextType {
   gymStats: GymStats;
   isLoadingData: boolean;
 
+  // Retention Intelligence Layer
+  retentionProfiles: MemberRetentionProfile[];
+  retentionStats: RetentionStats;
+
   // Actions
   checkInMember: (memberId: string) => Promise<{ success: boolean; message: string }>;
   checkOutMember: (memberId: string) => Promise<{ success: boolean; message: string }>;
@@ -84,6 +92,7 @@ interface GymContextType {
   createPlan: (plan: Omit<MembershipPlan, 'id' | 'activeMembersCount' | 'totalRevenueINR' | 'expiringThisWeek'>) => void;
   sendWhatsAppRenewal: (memberId: string, customMessage?: string) => Promise<void>;
   freezeMembership: (memberId: string, days: number, reason: string) => Promise<void>;
+  logRetentionOutreach: (memberId: string, actionType: string, notes?: string) => Promise<void>;
 
   // Toasts
   toasts: ToastItem[];
@@ -734,6 +743,69 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setInvoiceModalData({ isOpen: false, payment: null });
   };
 
+  // Retention Intelligence Layer calculations
+  const { profiles: retentionProfiles, stats: retentionStats } = useMemo(() => {
+    return calculateRetentionOverview(members, plans, payments, checkIns);
+  }, [members, plans, payments, checkIns]);
+
+  const logRetentionOutreach = async (memberId: string, actionType: string, notes?: string) => {
+    const member = members.find((m) => m.id === memberId);
+    if (!member) return;
+
+    const profile = retentionProfiles.find((p) => p.memberId === memberId);
+
+    const logTitle =
+      actionType === 'whatsapp_reengage'
+        ? 'Retention Outreach Logged — WhatsApp Re-engagement'
+        : actionType === 'whatsapp_renewal'
+        ? 'Retention Outreach Logged — Expiry Renewal Notice'
+        : actionType === 'call_winback'
+        ? 'Retention Outreach Logged — Win-Back Call'
+        : actionType === 'trainer_checkin'
+        ? 'Retention Outreach Logged — Trainer Check-In'
+        : actionType === 'payment_link'
+        ? 'Retention Outreach Logged — Overdue Payment Link'
+        : `Retention Outreach Logged (${actionType})`;
+
+    const logDescription =
+      notes ||
+      `Outreach recorded by ${currentUser.fullName} (${currentUser.role}). Risk Level: ${profile?.riskLevel?.toUpperCase() || 'HIGH'} (Score: ${profile?.riskScore || 'N/A'}/100). Status: OUTREACH LOGGED`;
+
+    const newTimelineItem = {
+      id: 'tim-' + Date.now(),
+      type: 'retention_outreach_logged' as const,
+      title: logTitle,
+      description: logDescription,
+      timestamp: 'Just now',
+      author: currentUser.fullName,
+      metadata: {
+        riskScore: profile?.riskScore,
+        riskLevel: profile?.riskLevel,
+        reasons: profile?.reasons,
+        action: actionType,
+        status: 'OUTREACH LOGGED',
+      },
+    };
+
+    setMembers((prev) =>
+      prev.map((m) => {
+        if (m.id === memberId) {
+          return {
+            ...m,
+            timeline: [newTimelineItem, ...m.timeline],
+          };
+        }
+        return m;
+      })
+    );
+
+    addToast({
+      title: 'Outreach Logged',
+      message: `Retention action recorded for ${member.name}. State: OUTREACH LOGGED.`,
+      type: 'success',
+    });
+  };
+
   return (
     <GymContext.Provider
       value={{
@@ -752,6 +824,8 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         payments,
         gymStats,
         isLoadingData,
+        retentionProfiles,
+        retentionStats,
         checkInMember,
         checkOutMember,
         addMember,
@@ -761,6 +835,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createPlan,
         sendWhatsAppRenewal,
         freezeMembership,
+        logRetentionOutreach,
         toasts,
         addToast,
         removeToast,

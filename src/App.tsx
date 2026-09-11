@@ -7,6 +7,7 @@ import { MemberProfileView } from './views/MemberProfileView';
 import { AttendanceView } from './views/AttendanceView';
 import { MembershipsView } from './views/MembershipsView';
 import { PaymentsView } from './views/PaymentsView';
+import { RetentionView } from './views/RetentionView';
 
 const AppContent: React.FC = () => {
   const { activeView } = useGym();
@@ -15,6 +16,8 @@ const AppContent: React.FC = () => {
     switch (activeView) {
       case 'overview':
         return <OverviewView />;
+      case 'retention':
+        return <RetentionView />;
       case 'members':
         return <MembersView />;
       case 'profile':

@@ -40,8 +40,8 @@ export const WhatsAppRenewalModal: React.FC = () => {
     <Modal
       isOpen={isOpen}
       onClose={closeWhatsAppModal}
-      title="Dispatch WhatsApp Renewal Communication"
-      subtitle="Direct member retention outreach with pre-filled payment links"
+      title="Prepare WhatsApp Renewal Outreach"
+      subtitle="Log member retention communication with pre-filled payment links"
       maxWidth="lg"
       footer={
         <>
@@ -53,7 +53,7 @@ export const WhatsAppRenewalModal: React.FC = () => {
             leftIcon={<Send className="w-4 h-4" />}
             onClick={handleSend}
           >
-            Send WhatsApp via GYM OS
+            Log & Dispatch Outreach
           </Button>
         </>
       }

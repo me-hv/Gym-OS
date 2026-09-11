@@ -33,6 +33,8 @@ import { REVENUE_CHART_DATA, HOURLY_ATTENDANCE_DATA } from '../data/mockData';
 export const OverviewView: React.FC = () => {
   const {
     gymStats,
+    retentionStats,
+    retentionProfiles,
     members,
     checkIns,
     payments,
@@ -43,9 +45,9 @@ export const OverviewView: React.FC = () => {
     setAddMemberModalOpen,
   } = useGym();
 
-  const expiringMembers = members
-    .filter((m) => m.status === 'expiring' || (m.daysRemaining <= 7 && m.daysRemaining >= 0))
-    .slice(0, 5);
+  const topAtRiskProfiles = retentionProfiles
+    .filter((p) => p.status !== 'cancelled' && (p.riskLevel === 'critical' || p.riskLevel === 'high' || p.riskLevel === 'moderate'))
+    .slice(0, 3);
 
   const customTooltipFormatter = (value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Revenue'];
 
@@ -88,22 +90,19 @@ export const OverviewView: React.FC = () => {
           onActionClick={() => setActiveView('payments')}
         />
 
-        {/* KPI 4: REVENUE AT RISK (High Priority Concept) */}
+        {/* KPI 4: REVENUE AT RISK (Retention Intelligence Gateway) */}
         <StatCard
-          label="Revenue At Risk"
-          value={`₹${gymStats.revenueAtRiskINR.toLocaleString('en-IN')}`}
-          subValue={`${gymStats.expiringIn7DaysCount} expiring in 7 days`}
+          label="Revenue At Risk (7d)"
+          value={`₹${retentionStats.revenueAtRisk7DaysINR.toLocaleString('en-IN')}`}
+          subValue={`${retentionStats.totalAtRiskCount} members need attention`}
           icon={<AlertTriangle className="w-4 h-4 text-amber-400" />}
           variant="warning"
-          actionLabel="Engage expiring athletes"
-          onActionClick={() => {
-            const firstExp = expiringMembers[0];
-            if (firstExp) openWhatsAppModal(firstExp);
-          }}
+          actionLabel="Open Retention Desk"
+          onActionClick={() => setActiveView('retention')}
         />
       </div>
 
-      {/* Hero Feature Section: Revenue At Risk Retention Hub */}
+      {/* Hero Feature Section: Retention Command Gateway */}
       <div className="rounded-2xl p-6 bg-gradient-to-br from-amber-500/[0.08] via-surface-300 to-surface-300 shadow-surface relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-full bg-radial from-amber-500/5 to-transparent pointer-events-none" />
 
@@ -114,89 +113,94 @@ export const OverviewView: React.FC = () => {
                 <AlertTriangle className="w-4 h-4" />
               </span>
               <h3 className="text-base font-bold text-white tracking-tight">
-                Revenue Retention Command: ₹{gymStats.revenueAtRiskINR.toLocaleString('en-IN')} Expiring
+                Retention Intelligence: {retentionStats.totalAtRiskCount} Members Require Action
               </h3>
               <span className="text-xs bg-amber-500/15 text-amber-300 font-mono px-2.5 py-0.5 rounded-full font-semibold">
-                {gymStats.expiringIn7DaysCount} Members at Risk
+                ₹{retentionStats.revenueAtRisk7DaysINR.toLocaleString('en-IN')} at Risk (7d)
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-1.5 max-w-2xl leading-relaxed">
-              These members expire within the next 7 days. Trigger pre-composed, personalized WhatsApp renewal offers with 1-click UPI checkout links to protect your monthly recurring cashflow.
+              {retentionStats.highRiskCount + retentionStats.criticalRiskCount} high-risk athletes and {retentionStats.inactive7DaysCount} inactive members (7+ days). Open the Retention Command Center to view explainable reasons and prioritized outreach actions.
             </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <Button
               size="sm"
-              variant="warning"
-              leftIcon={<Send className="w-3.5 h-3.5" />}
-              onClick={() => {
-                if (expiringMembers[0]) openWhatsAppModal(expiringMembers[0]);
-              }}
+              variant="primary"
+              leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+              onClick={() => setActiveView('retention')}
             >
-              Batch WhatsApp Outreach
+              Open Retention Desk
             </Button>
           </div>
         </div>
 
-        {/* Expiring Members At-A-Glance List */}
+        {/* Top Priority At-Risk Members Quick Preview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-          {expiringMembers.map((member) => (
-            <div
-              key={member.id}
-              className="p-3.5 rounded-xl bg-surface-200/80 hover:bg-surface-200 transition-all flex flex-col justify-between"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-surface-100 overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
-                    {member.avatarUrl ? (
-                      <img src={member.avatarUrl} alt={member.name} className="w-full h-full object-cover" />
-                    ) : (
-                      member.name.charAt(0)
-                    )}
+          {topAtRiskProfiles.map((profile) => {
+            const memberObj = members.find((m) => m.id === profile.memberId);
+            return (
+              <div
+                key={profile.memberId}
+                className="p-3.5 rounded-xl bg-surface-200/80 hover:bg-surface-200 transition-all flex flex-col justify-between"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-surface-100 overflow-hidden shrink-0 flex items-center justify-center font-semibold text-xs text-zinc-300">
+                      {profile.avatarUrl ? (
+                        <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                      ) : (
+                        profile.name.charAt(0)
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <button
+                        onClick={() => viewMemberProfile(profile.memberId)}
+                        className="text-xs font-bold text-white hover:text-brand-300 truncate block text-left"
+                      >
+                        {profile.name}
+                      </button>
+                      <span className="text-[11px] text-zinc-400 truncate block font-mono">
+                        {profile.planName} • ₹{profile.planPriceINR.toLocaleString('en-IN')}
+                      </span>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <button
-                      onClick={() => viewMemberProfile(member.id)}
-                      className="text-xs font-bold text-white hover:text-brand-300 truncate block text-left"
-                    >
-                      {member.name}
-                    </button>
-                    <span className="text-[11px] text-zinc-400 truncate block">
-                      {member.planName}
-                    </span>
-                  </div>
+
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md font-mono shrink-0 ${
+                      profile.riskLevel === 'critical'
+                        ? 'bg-rose-500/20 text-rose-300'
+                        : profile.riskLevel === 'high'
+                        ? 'bg-orange-500/20 text-orange-300'
+                        : 'bg-amber-500/20 text-amber-300'
+                    }`}
+                  >
+                    #{profile.priorityRank} {profile.riskLevel.toUpperCase()}
+                  </span>
                 </div>
 
-                <span
-                  className={`text-[11px] font-bold px-2 py-0.5 rounded-md font-mono shrink-0 ${
-                    member.daysRemaining <= 2
-                      ? 'bg-rose-500/20 text-rose-300'
-                      : 'bg-amber-500/20 text-amber-300'
-                  }`}
-                >
-                  {member.daysRemaining === 0
-                    ? 'Expires Today'
-                    : member.daysRemaining < 0
-                    ? 'Lapsed'
-                    : `${member.daysRemaining}d left`}
-                </span>
-              </div>
-
-              <div className="mt-3 pt-2.5 border-t border-white/[0.04] flex items-center justify-between text-xs">
-                <div className="text-zinc-400 text-[11px]">
-                  Attendance: <strong className="text-zinc-200 font-mono">{member.attendanceRate}%</strong>
+                <div className="mt-2 text-[11px] text-zinc-300 line-clamp-1">
+                  • {profile.reasons[0] || 'Requires retention follow-up'}
                 </div>
-                <button
-                  onClick={() => openWhatsAppModal(member)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-md transition-colors"
-                >
-                  <Send className="w-3 h-3" />
-                  <span>Send WhatsApp</span>
-                </button>
+
+                <div className="mt-3 pt-2.5 border-t border-white/[0.04] flex items-center justify-between text-xs">
+                  <div className="text-zinc-400 text-[11px] font-mono">
+                    Last: <strong className="text-zinc-200">{profile.daysSinceLastVisit === 0 ? 'Today' : `${profile.daysSinceLastVisit}d ago`}</strong>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (memberObj) openWhatsAppModal(memberObj);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-md transition-colors"
+                  >
+                    <Send className="w-3 h-3" />
+                    <span>Outreach</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

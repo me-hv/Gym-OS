@@ -11,6 +11,8 @@ export type WorkoutGoal =
 export type UserRole = 'owner' | 'admin' | 'trainer' | 'front_desk';
 export type AppMode = 'production' | 'demo';
 
+export type ActiveNavView = 'overview' | 'members' | 'profile' | 'attendance' | 'memberships' | 'payments' | 'retention';
+
 export interface TaxBreakdown {
   taxableAmountINR: number;
   cgstINR: number;
@@ -32,11 +34,22 @@ export interface AttendanceHistoryItem {
 
 export interface ActivityTimelineItem {
   id: string;
-  type: 'checkin' | 'checkout' | 'payment' | 'renewal' | 'reminder_sent' | 'note' | 'status_change';
+  type:
+    | 'checkin'
+    | 'checkout'
+    | 'payment'
+    | 'renewal'
+    | 'reminder_sent'
+    | 'note'
+    | 'status_change'
+    | 'retention_outreach_logged'
+    | 'retention_alert_generated'
+    | 'member_reengaged';
   title: string;
   description: string;
   timestamp: string;
   author?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface MembershipHistoryItem {
@@ -138,6 +151,7 @@ export interface PaymentTransaction {
   paymentMethod?: PaymentMethod;
   referenceId?: string; // UPI / Card transaction ID
   collectedBy: string;
+  notes?: string;
 }
 
 export interface RevenueRiskMember {
@@ -177,4 +191,88 @@ export interface RenewalPayload {
   paymentMethod: PaymentMethod;
   notes?: string;
   customStartDate?: string;
+}
+
+// ==============================================================================
+// RETENTION & REVENUE INTELLIGENCE DOMAIN TYPES
+// ==============================================================================
+
+export type RetentionRiskLevel =
+  | 'low'
+  | 'moderate'
+  | 'high'
+  | 'critical'
+  | 'frozen'
+  | 'recovered'
+  | 'new_member';
+
+export type RetentionSegment =
+  | 'all_at_risk'
+  | 'expiring_soon'
+  | 'inactive_7d'
+  | 'high_value'
+  | 'declining'
+  | 'payment_overdue'
+  | 'recovery_pool'
+  | 'frozen';
+
+export interface RetentionSignalBreakdown {
+  expiryRiskScore: number; // 0 - 35
+  inactivityRiskScore: number; // 0 - 35
+  attendanceDeclineScore: number; // 0 - 20
+  paymentRiskScore: number; // 0 - 10
+  totalRiskScore: number; // 0 - 100
+}
+
+export interface MemberRetentionProfile {
+  memberId: string;
+  memberCode: string;
+  name: string;
+  avatarUrl?: string;
+  phone: string;
+  email: string;
+  assignedTrainer: string;
+  planId: string;
+  planName: string;
+  planPriceINR: number;
+  status: MemberStatus;
+  daysRemaining: number;
+  expiryDate: string;
+  lastVisit: string;
+  lastVisitDate: string;
+  daysSinceLastVisit: number;
+  totalVisits: number;
+  recentVisits30Days: number;
+  previousVisits30Days: number;
+  attendanceTrendPercent: number; // Negative indicates decline
+  attendanceConsistencyRate: number;
+  pendingAmountINR: number;
+  paymentStatus: PaymentStatus;
+  isFrozen: boolean;
+  isNewMember: boolean;
+  historicalLifetimeValueINR: number;
+  revenueAtRiskINR: number;
+  riskScore: number; // 0 - 100
+  riskLevel: RetentionRiskLevel;
+  priorityRank: number; // 1 = highest priority
+  priorityScore: number;
+  reasons: string[];
+  recommendedAction: string;
+  recommendedActionType: 'whatsapp_reengage' | 'whatsapp_renewal' | 'call_winback' | 'trainer_checkin' | 'payment_link' | 'none';
+  outreachStatus: 'none' | 'logged' | 'in_progress' | 'renewed';
+  lastOutreachDate?: string;
+}
+
+export interface RetentionStats {
+  totalAtRiskCount: number;
+  revenueAtRisk7DaysINR: number;
+  revenueAtRisk14DaysINR: number;
+  revenueAtRisk30DaysINR: number;
+  highRiskCount: number;
+  criticalRiskCount: number;
+  inactive7DaysCount: number;
+  renewalsThisMonthCount: number;
+  reengagedThisMonthCount: number;
+  recoveredRevenueMTDINR: number;
+  retentionRateDisplay: string; // e.g. "89.2%" or "Not enough history"
 }
